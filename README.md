@@ -1,7 +1,14 @@
 # Zero WYSIWYG
 
-A lightweight, **zero-dependency** HTML editor using `contentEditable`.  
-Built-in YouTube embeds, image resize, dark/light themes, and i18n — all in **~30 KB** (JS + CSS, unminified).
+[![npm version](https://img.shields.io/npm/v/zero-wysiwyg.svg)](https://www.npmjs.com/package/zero-wysiwyg)
+[![license](https://img.shields.io/npm/l/zero-wysiwyg.svg)](https://github.com/KaTXi/zero-wysiwyg/blob/main/LICENSE)
+[![zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](https://www.npmjs.com/package/zero-wysiwyg)
+[![bundle size](https://img.shields.io/badge/bundle-~120KB-blue.svg)](https://github.com/KaTXi/zero-wysiwyg)
+
+A lightweight, **zero-dependency** WYSIWYG HTML editor with **35+ built-in features**.  
+Tables, code blocks, YouTube embeds, slash commands, emoji picker, balloon toolbar, find & replace, dark/light themes, and 7 languages — all with **zero dependencies**.
+
+**[Live Demo](https://katxi.github.io/zero-wysiwyg/)** · **[npm](https://www.npmjs.com/package/zero-wysiwyg)** · **[GitHub](https://github.com/KaTXi/zero-wysiwyg)**
 
 > Originally developed by **Alejandro Reyero** (areyero@hotmail.com) for the admin panel of [https://todojuegos.com](https://todojuegos.com).
 
@@ -11,29 +18,38 @@ Built-in YouTube embeds, image resize, dark/light themes, and i18n — all in **
 
 ## Features
 
+
 - ✅ **Zero dependencies** — no jQuery, no React, no build step required
-- ✅ **Rich formatting** — Bold, Italic, Underline, Strikethrough, Headings (H2–H4), Paragraph
-- ✅ **Lists** — Ordered, Unordered, nested via Indent/Outdent (Tab/Shift+Tab)
+- ✅ **Rich formatting** — Bold, Italic, Underline, Strikethrough, Subscript, Superscript, Blockquote
+- ✅ **Headings** — H2, H3, H4, Paragraph with SVG toolbar icons
+- ✅ **Lists** — Ordered, Unordered, **Task Lists** (checkboxes), nested via Indent/Outdent
 - ✅ **Alignment** — Left, Center, Right
 - ✅ **Links** — Create/edit dialog with "open in new window" toggle
 - ✅ **Images** — Insert/edit with dimensions, **visual resize handles** (drag corners)
 - ✅ **YouTube embeds** — Paste URL or enter ID, thumbnail preview placeholders, **resize + alignment**
-- ✅ **Generic iframes** — Rendered as placeholders, preserved in HTML output
-- ✅ **HTML source editing** — Toggle to view/edit raw HTML with syntax-colored textarea
+- ✅ **Tables** — Visual 10×10 grid picker, **right-click context menu** (add/delete rows/cols, toggle header)
+- ✅ **Code blocks** — Insert with 8-language selector, compatible with Prism.js/highlight.js
+- ✅ **Color picker** — Text color + background color, 40-swatch palette, hex input, remove color
+- ✅ **Emoji picker** — 320+ built-in emojis across 6 categories with search filter
+- ✅ **Balloon toolbar** — Floating toolbar on text selection (`toolbarMode: 'balloon'` or `'both'`)
+- ✅ **Slash commands** — Type `/` to trigger command menu with 12 block types (`slashCommands: true`)
+- ✅ **Find & Replace** — Ctrl+F with match highlighting, case toggle, Replace All
+- ✅ **Auto-link detection** — Bare URLs automatically wrapped in `<a>` tags as you type
+- ✅ **HTML source editing** — Toggle to view/edit raw HTML
 - ✅ **Fullscreen mode** — Escape to exit
-- ✅ **Smart paste** — Cleans Word/Office HTML, plain text preserves line breaks, YouTube URLs auto-embed
-- ✅ **Keyboard shortcuts** — Ctrl+B/I/U, Tab for list nesting
-- ✅ **Tables** — Insert table dialog with visual grid picker (up to 10×10) and manual size input
-- ✅ **Color picker** — Text color and background color with 40-swatch palette + custom hex input
-- ✅ **Undo/Redo** — Toolbar buttons with keyboard shortcuts (Ctrl+Z / Ctrl+Y)
+- ✅ **Smart paste** — Cleans Word/Office HTML, preserves line breaks, YouTube URLs auto-embed
+- ✅ **Undo/Redo** — Toolbar buttons + Ctrl+Z / Ctrl+Y
 - ✅ **Word count** — Optional status bar showing words and characters
+- ✅ **SVG toolbar icons** — 37 clean inline SVG icons, Lucide-style
+- ✅ **Programmatic API** — 10 methods: `getHTML`, `setHTML`, `isEmpty`, `focus`, `enable`, `disable`, etc.
 - ✅ **Event callbacks** — `onChange`, `onFocus`, `onBlur`, `onReady`
-- ✅ **Programmatic API** — `getHTML()`, `setHTML()`, `isEmpty()`, `focus()`, `enable()`, `disable()`
-- ✅ **Accessibility** — ARIA labels on all toolbar buttons
-- ✅ **i18n** — Built-in English, Spanish, French, German, Portuguese, Italian, Japanese — extensible to any language
-- ✅ **Theming** — CSS custom properties for easy dark/light/custom themes
-- ✅ **Framework wrappers** — React and Vue 3 component examples included
-- ✅ **Lightweight** — ~28 KB JS + ~9 KB CSS (unminified)
+- ✅ **Toolbar customization** — Filter by button name, alias, or group label
+- ✅ **Accessibility** — ARIA labels, roles on all toolbar buttons
+- ✅ **i18n** — 7 built-in languages (EN, ES, FR, DE, PT, IT, JA) — extensible to any language
+- ✅ **Theming** — 18 CSS custom properties (`--zw-*`) for dark/light/custom themes
+- ✅ **TypeScript** — Full `.d.ts` declarations for all API methods and options
+- ✅ **Framework wrappers** — React, Vue 3, PHP, Django examples included
+- ✅ **Lightweight** — ~102 KB JS + ~22 KB CSS (unminified, zero dependencies)
 
 ## Quick Start
 
@@ -74,6 +90,20 @@ import ZeroWysiwyg from 'zero-wysiwyg';
 ZeroWysiwyg.init('content', { locale: 'en' });
 ```
 
+### Via CDN
+
+```html
+<link rel="stylesheet" href="https://unpkg.com/zero-wysiwyg/src/zero-wysiwyg.css">
+<script src="https://unpkg.com/zero-wysiwyg/src/zero-wysiwyg.js"></script>
+```
+
+Or via jsDelivr:
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/zero-wysiwyg/src/zero-wysiwyg.css">
+<script src="https://cdn.jsdelivr.net/npm/zero-wysiwyg/src/zero-wysiwyg.js"></script>
+```
+
 ## API
 
 ### `ZeroWysiwyg.init(textareaId, options)`
@@ -90,6 +120,9 @@ Creates an editor instance for the given `<textarea>`.
 | `onFocus` | `function` | — | Called when editor gains focus |
 | `onBlur` | `function` | — | Called when editor loses focus |
 | `onReady` | `function` | — | Called with instance after initialization |
+| `toolbarMode` | `string` | `'top'` | `'top'`, `'balloon'` (floating on selection), or `'both'` |
+| `slashCommands` | `boolean` | `false` | Enable slash commands — type `/` to trigger block menu |
+| `autoLink` | `boolean` | `true` | Auto-detect and linkify bare URLs as user types |
 | `toolbar` | `array` | — | Filter visible buttons by command name or group label (see below) |
 
 The first argument can be a **string ID** or an **HTMLElement** reference:
