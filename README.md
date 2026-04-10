@@ -3,7 +3,9 @@
 A lightweight, **zero-dependency** HTML editor using `contentEditable`.  
 Built-in YouTube embeds, image resize, dark/light themes, and i18n — all in **~30 KB** (JS + CSS, unminified).
 
-> Originally developed from scratch by **Alejandro Reyero** (areyero@hotmail.com) for the admin panel of [https://todojuegos.com](https://todojuegos.com).
+> Originally developed by **Alejandro Reyero** (areyero@hotmail.com) for the admin panel of [https://todojuegos.com](https://todojuegos.com).
+
+<img width="838" height="778" alt="Screenshot 2026-04-10 at 15 37 34" src="https://github.com/user-attachments/assets/bebd7909-b301-414c-a170-65e21c848ee9" />
 
 ---
 
