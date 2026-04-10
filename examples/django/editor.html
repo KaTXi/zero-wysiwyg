@@ -1,0 +1,149 @@
+{% comment %}
+  Zero WYSIWYG — Django Template Integration Example
+
+  Usage in your Django project:
+    1. Add zero-wysiwyg.css and zero-wysiwyg.js to your static files
+    2. Include them in your template via {% static %} tags
+    3. Add a <textarea> inside your form
+    4. Call ZeroWysiwyg.init() in a script block
+    5. On POST, access the HTML via request.POST['content']
+
+  This template assumes:
+    - You have a view that passes 'form' context variable
+    - Your form has 'title' and 'content' fields
+    - CSRF middleware is enabled (standard Django)
+{% endcomment %}
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero WYSIWYG — Django Example</title>
+    <link rel="stylesheet" href="{% static 'zero-wysiwyg/zero-wysiwyg.css' %}">
+    <!-- Optional: Dark theme -->
+    <link rel="stylesheet" href="{% static 'zero-wysiwyg/themes/dark.css' %}">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #333; }
+        h1 { margin-bottom: 8px; }
+        p.desc { color: #666; margin-bottom: 24px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+        .form-group { margin-bottom: 20px; }
+        input[type="text"] { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+        textarea { width: 100%; }
+        .btn-submit { padding: 12px 24px; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-size: 15px; cursor: pointer; }
+        .btn-submit:hover { background: #1d4ed8; }
+        .messages { margin-bottom: 16px; }
+        .messages li { padding: 10px 16px; border-radius: 6px; margin-bottom: 8px; list-style: none; }
+        .messages .success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+        .messages .error { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
+    </style>
+</head>
+<body>
+    <h1>Zero WYSIWYG — Django Template</h1>
+    <p class="desc">Django form integration with CSRF token. The editor content is submitted as a standard POST field.</p>
+
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <form method="POST" action="{% url 'article_edit' %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="id_title">Title</label>
+            {{ form.title }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_content">Content</label>
+            {{ form.content }}
+        </div>
+
+        {% if form.errors %}
+        <div class="messages">
+            {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+            <li class="error"><strong>{{ field }}:</strong> {{ error }}</li>
+            {% endfor %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <button type="submit" class="btn-submit">Save Article</button>
+    </form>
+
+    <script src="{% static 'zero-wysiwyg/zero-wysiwyg.js' %}"></script>
+    <script>
+        // Initialize the editor on Django's textarea
+        // Django renders textarea with id="id_content" by default
+        ZeroWysiwyg.init('id_content', {
+            height: '400px',
+            locale: 'en',
+            wordCount: true,
+            slashCommands: true
+        });
+    </script>
+
+    {% comment %}
+    ============================================================
+    Example Django view (views.py):
+    ============================================================
+
+    from django.shortcuts import render, redirect
+    from django.contrib import messages
+    from .forms import ArticleForm
+
+    def article_edit(request):
+        if request.method == 'POST':
+            form = ArticleForm(request.POST)
+            if form.is_valid():
+                article = form.save()
+                messages.success(request, 'Article saved!')
+                return redirect('article_edit')
+        else:
+            form = ArticleForm()
+        return render(request, 'editor.html', {'form': form})
+
+    ============================================================
+    Example Django form (forms.py):
+    ============================================================
+
+    from django import forms
+    from .models import Article
+
+    class ArticleForm(forms.ModelForm):
+        class Meta:
+            model = Article
+            fields = ['title', 'content']
+            widgets = {
+                'title': forms.TextInput(attrs={
+                    'class': 'form-input',
+                    'placeholder': 'Article title'
+                }),
+                'content': forms.Textarea(attrs={
+                    'style': 'width:100%',
+                    'rows': 10
+                }),
+            }
+
+    ============================================================
+    Example Django model (models.py):
+    ============================================================
+
+    from django.db import models
+
+    class Article(models.Model):
+        title = models.CharField(max_length=200)
+        content = models.TextField()  # Stores HTML from the editor
+        created_at = models.DateTimeField(auto_now_add=True)
+        updated_at = models.DateTimeField(auto_now=True)
+
+    {% endcomment %}
+</body>
+</html>

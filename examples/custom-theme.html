@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero WYSIWYG — Custom Theme</title>
+    <link rel="stylesheet" href="../src/zero-wysiwyg.css">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #333; }
+        h1 { margin-bottom: 8px; }
+        p.desc { color: #666; margin-bottom: 24px; }
+        h2.section { margin-top: 40px; margin-bottom: 16px; font-size: 18px; color: #555; }
+        pre.code { background: #f5f5f5; padding: 16px; border-radius: 8px; font-size: 12px; overflow-x: auto; margin-bottom: 24px; }
+
+        /* === Custom Purple Theme — just override the CSS variables === */
+        .purple-theme {
+            --zw-accent: #8b5cf6;
+            --zw-accent-hover: #7c3aed;
+            --zw-accent-light: rgba(139, 92, 246, 0.1);
+            --zw-bg-toolbar: #faf5ff;
+            --zw-border: #e9d5ff;
+        }
+
+        /* === Custom Green Theme === */
+        .green-dark-theme {
+            --zw-bg: #0d1117;
+            --zw-bg-toolbar: #161b22;
+            --zw-bg-input: #0d1117;
+            --zw-bg-dialog: #161b22;
+            --zw-bg-hover: rgba(255,255,255,0.04);
+            --zw-text: #e6edf3;
+            --zw-text-heading: #ffffff;
+            --zw-text-secondary: #8b949e;
+            --zw-text-muted: #484f58;
+            --zw-accent: #3fb950;
+            --zw-accent-hover: #2ea043;
+            --zw-accent-light: rgba(63, 185, 80, 0.12);
+            --zw-border: rgba(255,255,255,0.08);
+        }
+    </style>
+</head>
+<body>
+    <h1>Zero WYSIWYG — Custom Themes</h1>
+    <p class="desc">Create your own theme by overriding <code>--zw-*</code> CSS variables on a parent element. No build step needed.</p>
+
+    <h2 class="section">🟣 Purple Theme (Light)</h2>
+    <div class="purple-theme">
+        <textarea id="purple">
+            <p>This editor uses a <strong>purple accent</strong> theme defined with just 5 CSS variable overrides.</p>
+        </textarea>
+    </div>
+
+    <h2 class="section">🟢 GitHub-style Dark Theme</h2>
+    <div class="green-dark-theme" style="padding: 20px; background: #0d1117; border-radius: 12px;">
+        <textarea id="green">
+            <p>This editor mimics <strong>GitHub's dark theme</strong> with a green accent color.</p>
+        </textarea>
+    </div>
+
+    <h2 class="section">How it works</h2>
+    <pre class="code">/* Just override CSS variables on a parent element */
+.my-custom-theme {
+    --zw-accent: #8b5cf6;
+    --zw-accent-hover: #7c3aed;
+    --zw-accent-light: rgba(139, 92, 246, 0.1);
+    --zw-bg-toolbar: #faf5ff;
+    --zw-border: #e9d5ff;
+}
+
+/* Then wrap your textarea */
+&lt;div class="my-custom-theme"&gt;
+    &lt;textarea id="editor"&gt;&lt;/textarea&gt;
+&lt;/div&gt;</pre>
+
+    <script src="../src/zero-wysiwyg.js"></script>
+    <script>
+        ZeroWysiwyg.init('purple', { height: '200px', wordCount: true, slashCommands: true });
+        ZeroWysiwyg.init('green', { height: '200px', wordCount: true, slashCommands: true });
+    </script>
+</body>
+</html>

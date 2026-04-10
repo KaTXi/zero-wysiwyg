@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero WYSIWYG — Multiple Editors</title>
+    <link rel="stylesheet" href="../src/zero-wysiwyg.css">
+    <link rel="stylesheet" href="../src/themes/dark.css">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; color: #333; }
+        h1 { margin-bottom: 8px; }
+        p.desc { color: #666; margin-bottom: 24px; }
+        .editor-section { margin-bottom: 32px; }
+        .editor-section h2 { font-size: 16px; margin-bottom: 8px; }
+        .editor-section p { font-size: 13px; color: #888; margin-bottom: 12px; }
+        .dark-wrapper { padding: 16px; background: #0f0c29; border-radius: 12px; }
+        .controls { margin-top: 24px; padding: 16px; background: #f5f5f5; border-radius: 8px; }
+        .controls button { padding: 8px 16px; margin-right: 8px; background: #2563eb; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .controls button:hover { background: #1d4ed8; }
+        .controls button.danger { background: #e74c3c; }
+        .controls button.danger:hover { background: #c0392b; }
+    </style>
+</head>
+<body>
+    <h1>Zero WYSIWYG — Multiple Editors</h1>
+    <p class="desc">Multiple editor instances on the same page, each with independent configuration. You can also create and destroy them dynamically.</p>
+
+    <div class="editor-section">
+        <h2>📝 Editor 1 — English, Light Theme</h2>
+        <p>Default configuration</p>
+        <textarea id="editor1">
+            <p>This is the <strong>first</strong> editor with the default light theme and English locale.</p>
+        </textarea>
+    </div>
+
+    <div class="editor-section">
+        <h2>🌙 Editor 2 — Spanish, Dark Theme</h2>
+        <p>Dark theme with Spanish locale</p>
+        <div class="dark-wrapper">
+            <textarea id="editor2">
+                <p>Este es el <strong>segundo</strong> editor con tema oscuro y español.</p>
+            </textarea>
+        </div>
+    </div>
+
+    <div class="editor-section" id="dynamicSection" style="display:none">
+        <h2>⚡ Editor 3 — Dynamically Created</h2>
+        <p>Created via JavaScript at runtime</p>
+        <textarea id="editor3"></textarea>
+    </div>
+
+    <div class="controls">
+        <strong>Dynamic controls:</strong><br><br>
+        <button onclick="createEditor3()">Create Editor 3</button>
+        <button class="danger" onclick="destroyEditor3()">Destroy Editor 3</button>
+    </div>
+
+    <script src="../src/zero-wysiwyg.js"></script>
+    <script>
+        // Initialize two editors at page load
+        ZeroWysiwyg.init('editor1', { height: '200px', wordCount: true, slashCommands: true });
+        ZeroWysiwyg.init('editor2', { height: '200px', locale: 'es', theme: 'dark', toolbarMode: 'both', slashCommands: true });
+
+        // Dynamic create/destroy
+        function createEditor3() {
+            document.getElementById('dynamicSection').style.display = 'block';
+            ZeroWysiwyg.init('editor3', { height: '200px', wordCount: true });
+        }
+        function destroyEditor3() {
+            ZeroWysiwyg.destroy('editor3');
+            document.getElementById('dynamicSection').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

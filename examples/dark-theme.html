@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero WYSIWYG — Dark Theme + Balloon Toolbar (Spanish)</title>
+    <link rel="stylesheet" href="../src/zero-wysiwyg.css">
+    <link rel="stylesheet" href="../src/themes/dark.css">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; background: #0f0c29; color: #e8e8e8; }
+        h1 { margin-bottom: 8px; }
+        p.desc { color: #9a9ab0; margin-bottom: 24px; }
+        .features { margin-bottom: 24px; padding: 16px 20px; background: rgba(231,76,60,0.08); border: 1px solid rgba(231,76,60,0.2); border-radius: 8px; font-size: 13px; line-height: 1.8; color: #c0c0d0; }
+        .features h3 { margin: 0 0 8px; font-size: 14px; color: #e74c3c; }
+        .features kbd { background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: monospace; color: #fff; }
+        .output { margin-top: 24px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 13px; }
+        .output h3 { margin: 0 0 8px; font-size: 14px; color: #9a9ab0; }
+        .output pre { white-space: pre-wrap; word-break: break-all; margin: 0; font-family: monospace; font-size: 12px; color: #7fdbca; }
+        a { color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <h1>Zero WYSIWYG — Dark Theme + Balloon Toolbar</h1>
+    <p class="desc">Dark theme, Spanish locale, balloon toolbar mode (<code>toolbarMode: 'both'</code>), slash commands, and word count. Select text to see the floating toolbar!</p>
+
+    <div class="features">
+        <h3>🎯 Funcionalidades destacadas:</h3>
+        • <strong>Barra flotante</strong>: Selecciona texto para ver el toolbar emergente<br>
+        • <strong>Comandos /</strong>: Escribe <kbd>/</kbd> al inicio de una línea para el menú de comandos<br>
+        • <strong>Buscar y reemplazar</strong>: Pulsa <kbd>Ctrl+F</kbd><br>
+        • <strong>Listas de tareas</strong>: Usa el botón ☑ del toolbar<br>
+        • <strong>Bloques de código</strong>: Botón <kbd>&lt;/&gt;</kbd> con selector de lenguaje<br>
+        • <strong>Edición de tablas</strong>: Clic derecho en una celda para añadir/eliminar filas y columnas<br>
+        • <strong>Emojis</strong>: 320+ emojis integrados con búsqueda
+    </div>
+
+    <textarea id="editor" name="content" style="width:100%">
+        <h2>Editor con tema oscuro</h2>
+        <p>Este es un ejemplo del editor con el <strong>tema oscuro</strong> y el <em>idioma español</em>, con la <u>barra flotante</u> activada.</p>
+        <h3>Lista de tareas</h3>
+        <ul class="zw-task-list">
+            <li class="zw-task-item zw-task-done"><input type="checkbox" checked> Activar tema oscuro ✓</li>
+            <li class="zw-task-item zw-task-done"><input type="checkbox" checked> Cambiar a español ✓</li>
+            <li class="zw-task-item"><input type="checkbox"> Seleccionar texto para ver barra flotante</li>
+            <li class="zw-task-item"><input type="checkbox"> Insertar tabla y hacer clic derecho</li>
+            <li class="zw-task-item"><input type="checkbox"> Probar comandos con /</li>
+        </ul>
+        <h3>Ejemplo de código</h3>
+        <pre class="zw-code-block"><code class="language-css">/* Tema oscuro con variables CSS */
+.zw-theme-dark {
+    --zw-bg: #0f0c29;
+    --zw-accent: #e74c3c;
+    --zw-text: #e8e8e8;
+}</code></pre>
+        <blockquote>Prueba a pegar una URL de YouTube como: https://www.youtube.com/watch?v=dQw4w9WgXcQ</blockquote>
+        <p>El editor soporta <strong>tablas</strong>, <em>colores</em>, imágenes con redimensionado, vídeos de YouTube, emojis, y mucho más — todo sin dependencias.</p>
+    </textarea>
+
+    <div class="output">
+        <h3>HTML Output:</h3>
+        <pre id="htmlOutput"></pre>
+    </div>
+
+    <script src="../src/zero-wysiwyg.js"></script>
+    <script>
+        ZeroWysiwyg.init('editor', {
+            height: '400px',
+            locale: 'es',
+            theme: 'dark',
+            toolbarMode: 'both',
+            wordCount: true,
+            slashCommands: true,
+            onChange: function(html) {
+                document.getElementById('htmlOutput').textContent = html;
+            }
+        });
+        document.getElementById('htmlOutput').textContent = document.getElementById('editor').value;
+    </script>
+</body>
+</html>

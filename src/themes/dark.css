@@ -1,0 +1,24 @@
+/**
+ * Zero WYSIWYG — Dark Theme
+ * 
+ * Apply with: ZeroWysiwyg.init('editor', { theme: 'dark' })
+ * or add class "zw-theme-dark" to a parent element.
+ */
+.zw-theme-dark,
+.zw-theme-dark .zw-link-dialog-overlay .zw-link-dialog {
+    --zw-bg: #0f0c29;
+    --zw-bg-toolbar: #1a1a2e;
+    --zw-bg-input: #0f0c29;
+    --zw-bg-dialog: #16213e;
+    --zw-bg-hover: rgba(255,255,255,0.05);
+    --zw-bg-source: #0a0a1a;
+    --zw-text: #e8e8e8;
+    --zw-text-heading: #ffffff;
+    --zw-text-secondary: #9a9ab0;
+    --zw-text-muted: #666680;
+    --zw-text-source: #7fdbca;
+    --zw-accent: #e74c3c;
+    --zw-accent-hover: #c0392b;
+    --zw-accent-light: rgba(231,76,60,0.15);
+    --zw-border: rgba(255,255,255,0.08);
+}

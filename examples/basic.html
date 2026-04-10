@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero WYSIWYG — Basic Example</title>
+    <link rel="stylesheet" href="../src/zero-wysiwyg.css">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #333; }
+        h1 { margin-bottom: 8px; }
+        p.desc { color: #666; margin-bottom: 24px; }
+        .features { margin-bottom: 24px; padding: 16px 20px; background: #f0f7ff; border: 1px solid #d0e3f7; border-radius: 8px; font-size: 13px; line-height: 1.8; }
+        .features h3 { margin: 0 0 8px; font-size: 14px; color: #2563eb; }
+        .features kbd { background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: monospace; }
+        .output { margin-top: 24px; padding: 16px; background: #f5f5f5; border-radius: 8px; font-size: 13px; }
+        .output h3 { margin: 0 0 8px; font-size: 14px; color: #666; }
+        .output pre { white-space: pre-wrap; word-break: break-all; margin: 0; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>Zero WYSIWYG — Basic Example</h1>
+    <p class="desc">Full-featured editor with slash commands enabled, word count, and all built-in features. English, light theme.</p>
+
+    <div class="features">
+        <h3>✨ Try these features:</h3>
+        • <strong>Slash commands</strong>: Type <kbd>/</kbd> on a new line to see the command menu<br>
+        • <strong>Find & Replace</strong>: Press <kbd>Ctrl+F</kbd> to search within your content<br>
+        • <strong>Task lists</strong>: Click the checkbox icon ☑ in the toolbar, then check/uncheck items<br>
+        • <strong>Code blocks</strong>: Click the <kbd>&lt;/&gt;</kbd> icon to insert a code block with language selector<br>
+        • <strong>Table editing</strong>: Insert a table, then <strong>right-click</strong> any cell for add/delete row/column options<br>
+        • <strong>Emoji picker</strong>: Click the 😀 icon in the toolbar<br>
+        • <strong>Color picker</strong>: Text color and background color with 40-swatch palette
+    </div>
+
+    <textarea id="editor" name="content" style="width:100%">
+        <h2>Welcome to Zero WYSIWYG</h2>
+        <p>This is a <strong>lightweight</strong>, <em>zero-dependency</em> HTML editor with 35+ features built-in.</p>
+        <h3>Task List Example</h3>
+        <ul class="zw-task-list">
+            <li class="zw-task-item"><input type="checkbox" checked> Try bold, italic, and underline formatting</li>
+            <li class="zw-task-item"><input type="checkbox"> Insert a YouTube video</li>
+            <li class="zw-task-item"><input type="checkbox"> Create a table and right-click it</li>
+            <li class="zw-task-item"><input type="checkbox"> Type / to try slash commands</li>
+            <li class="zw-task-item"><input type="checkbox"> Press Ctrl+F to try Find &amp; Replace</li>
+        </ul>
+        <h3>Code Block Example</h3>
+        <pre class="zw-code-block"><code class="language-javascript">// Zero WYSIWYG — zero dependencies!
+const editor = ZeroWysiwyg.init('myEditor', {
+    slashCommands: true,
+    wordCount: true,
+    theme: 'dark'
+});</code></pre>
+        <blockquote>Tip: Try selecting text above — a balloon toolbar appears! (See the dark theme example for balloon mode.)</blockquote>
+        <p>This editor supports <strong>tables</strong>, <em>colors</em>, <u>images</u>, YouTube embeds, emoji, and much more — all at under 120 KB with zero dependencies.</p>
+    </textarea>
+
+    <div class="output">
+        <h3>HTML Output (updates live):</h3>
+        <pre id="htmlOutput"></pre>
+    </div>
+
+    <script src="../src/zero-wysiwyg.js"></script>
+    <script>
+        ZeroWysiwyg.init('editor', {
+            height: '400px',
+            wordCount: true,
+            slashCommands: true,
+            onChange: function(html) {
+                document.getElementById('htmlOutput').textContent = html;
+            }
+        });
+        // Initial output
+        document.getElementById('htmlOutput').textContent = document.getElementById('editor').value;
+    </script>
+</body>
+</html>

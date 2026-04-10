@@ -1,0 +1,61 @@
+{
+  "name": "zero-wysiwyg",
+  "version": "1.1.0",
+  "description": "A lightweight, zero-dependency WYSIWYG HTML editor with built-in YouTube embeds, image resize, dark/light themes, and i18n",
+  "main": "dist/zero-wysiwyg.min.js",
+  "module": "src/zero-wysiwyg.js",
+  "unpkg": "dist/zero-wysiwyg.min.js",
+  "types": "src/zero-wysiwyg.d.ts",
+  "jsdelivr": "dist/zero-wysiwyg.min.js",
+  "exports": {
+    ".": {
+      "import": "./src/zero-wysiwyg.js",
+      "require": "./src/zero-wysiwyg.js",
+      "default": "./src/zero-wysiwyg.js"
+    },
+    "./src/zero-wysiwyg.css": "./src/zero-wysiwyg.css",
+    "./src/themes/dark.css": "./src/themes/dark.css",
+    "./dist/*": "./dist/*"
+  },
+  "files": [
+    "src/",
+    "dist/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "node build.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "wysiwyg",
+    "editor",
+    "html",
+    "contenteditable",
+    "vanilla",
+    "no-dependencies",
+    "youtube",
+    "image-resize",
+    "dark-theme",
+    "i18n",
+    "lightweight"
+  ],
+  "author": "Alejandro Reyero <areyero@hotmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KaTXi/zero-wysiwyg"
+  },
+  "homepage": "https://github.com/KaTXi/zero-wysiwyg#readme",
+  "bugs": {
+    "url": "https://github.com/KaTXi/zero-wysiwyg/issues"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "devDependencies": {
+    "terser": "^5.31.0",
+    "clean-css": "^5.3.3"
+  }
+}
