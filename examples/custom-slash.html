@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero WYSIWYG — Custom Slash Commands</title>
+    <link rel="stylesheet" href="../src/zero-wysiwyg.css">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #333; }
+        h1 { margin-bottom: 8px; }
+        p.desc { color: #666; margin-bottom: 24px; }
+        .info { margin-bottom: 24px; padding: 16px 20px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-size: 13px; line-height: 1.8; }
+        .info h3 { margin: 0 0 8px; font-size: 14px; color: #2563eb; }
+        .info code { background: #dbeafe; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+        .code-block { background: #1e293b; color: #e2e8f0; padding: 20px; border-radius: 8px; font-family: 'Fira Code', Consolas, monospace; font-size: 13px; overflow-x: auto; margin-bottom: 24px; line-height: 1.6; }
+        .code-block .comment { color: #64748b; }
+        .code-block .key { color: #7dd3fc; }
+        .code-block .string { color: #86efac; }
+        .code-block .fn { color: #c4b5fd; }
+        .output { margin-top: 24px; padding: 16px; background: #f5f5f5; border-radius: 8px; font-size: 13px; }
+        .output h3 { margin: 0 0 8px; font-size: 14px; color: #666; }
+        .output pre { white-space: pre-wrap; word-break: break-all; margin: 0; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>Zero WYSIWYG — Custom Slash Commands</h1>
+    <p class="desc">Add your own commands to the <kbd>/</kbd> slash menu using the <code>slashItems</code> option. Custom items appear alongside the built-in commands.</p>
+
+    <div class="info">
+        <h3>⚡ How it works</h3>
+        • Set <code>slashCommands: true</code> to enable the slash menu<br>
+        • Add <code>slashItems: [...]</code> with your custom commands<br>
+        • Each item needs: <code>label</code>, <code>icon</code> (emoji/text), <code>description</code>, and an <code>action(editor)</code> callback<br>
+        • Custom items appear <strong>above</strong> the built-in commands in the menu<br>
+        • Type <kbd>/</kbd> on an empty line or at the start of a line to open the menu
+    </div>
+
+    <div class="code-block">
+        <span class="comment">// Custom slash items configuration</span><br>
+        <span class="key">slashItems</span>: [<br>
+        &nbsp;&nbsp;{<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">label</span>: <span class="string">'Alert Box'</span>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">icon</span>: <span class="string">'🚨'</span>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">description</span>: <span class="string">'Insert a warning alert'</span>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">action</span>: <span class="key">function</span>(editor) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;editor.<span class="fn">insertHTML</span>(<span class="string">'&lt;div style="..."&gt;⚠️ Alert&lt;/div&gt;'</span>);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+        &nbsp;&nbsp;}<br>
+        ]
+    </div>
+
+    <textarea id="editor" style="width:100%">
+        <h2>Custom Slash Commands Demo</h2>
+        <p>Type <strong>/</strong> at the start of a new line to see the command menu.</p>
+        <p>You'll see <strong>4 custom commands</strong> at the top of the list:</p>
+        <ul>
+            <li>🚨 <strong>Alert Box</strong> — inserts a styled warning box</li>
+            <li>💡 <strong>Tip Box</strong> — inserts a helpful tip callout</li>
+            <li>📅 <strong>Date Stamp</strong> — inserts today's date</li>
+            <li>👋 <strong>Signature</strong> — inserts a signature block</li>
+        </ul>
+        <p>Try it below! Place your cursor on the next empty line and type <strong>/</strong></p>
+        <p></p>
+    </textarea>
+
+    <div class="output">
+        <h3>HTML Output (updates live):</h3>
+        <pre id="htmlOutput"></pre>
+    </div>
+
+    <script src="../src/zero-wysiwyg.js"></script>
+    <script>
+        ZeroWysiwyg.init('editor', {
+            height: '350px',
+            wordCount: true,
+            slashCommands: true,
+            autoLink: true,
+            slashItems: [
+                {
+                    label: 'Alert Box',
+                    icon: '🚨',
+                    description: 'Insert a warning alert box',
+                    action: function(editor) {
+                        editor.insertHTML(
+                            '<div style="padding:12px 16px; background:#fef2f2; border:1px solid #fca5a5; border-left:4px solid #ef4444; border-radius:6px; margin:8px 0; color:#991b1b;">' +
+                            '⚠️ <strong>Warning:</strong> Replace this text with your alert message.' +
+                            '</div><p></p>'
+                        );
+                    }
+                },
+                {
+                    label: 'Tip Box',
+                    icon: '💡',
+                    description: 'Insert a helpful tip callout',
+                    action: function(editor) {
+                        editor.insertHTML(
+                            '<div style="padding:12px 16px; background:#f0fdf4; border:1px solid #86efac; border-left:4px solid #22c55e; border-radius:6px; margin:8px 0; color:#166534;">' +
+                            '💡 <strong>Tip:</strong> Replace this text with your helpful tip.' +
+                            '</div><p></p>'
+                        );
+                    }
+                },
+                {
+                    label: 'Date Stamp',
+                    icon: '📅',
+                    description: 'Insert today\'s date',
+                    action: function(editor) {
+                        var today = new Date();
+                        var formatted = today.toLocaleDateString('en-US', {
+                            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                        });
+                        editor.insertHTML(
+                            '<p><strong>📅 ' + formatted + '</strong></p>'
+                        );
+                    }
+                },
+                {
+                    label: 'Signature',
+                    icon: '👋',
+                    description: 'Insert a signature block',
+                    action: function(editor) {
+                        editor.insertHTML(
+                            '<div style="padding:12px 16px; border-top:2px solid #e5e7eb; margin-top:16px; color:#6b7280; font-style:italic;">' +
+                            '<p>Best regards,<br><strong>Your Name</strong><br>' +
+                            '<span style="font-size:13px;">your.email@example.com</span></p>' +
+                            '</div>'
+                        );
+                    }
+                }
+            ],
+            onChange: function(html) {
+                document.getElementById('htmlOutput').textContent = html;
+            }
+        });
+
+        document.getElementById('htmlOutput').textContent = ZeroWysiwyg.getHTML('editor');
+    </script>
+</body>
+</html>

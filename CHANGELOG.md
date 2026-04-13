@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] — 2026-04-12
+
+### Custom Slash Commands (6.4)
+- **`slashItems` option** — Pass custom command arrays to `slashCommands` to override the default 12 commands
+
+### Cell Background Color (7.3)
+- **Cell background color** in table right-click context menu — uses native color picker
+
+### Enhanced Code Blocks (7.2)
+- **Tab key inserts 4 spaces** inside code blocks instead of changing focus
+- Code blocks now behave like a proper code editor for indentation
+
+### Enhanced Table Editing (7.3)
+- **Tab/Shift+Tab navigates between table cells** — Tab moves to next cell, Shift+Tab to previous
+- Wraps around rows (last cell → first cell of next row)
+- New helper functions: `getAncestorByClass`, `getAncestorTag`, `navigateTableCell`
+
+### Markdown Mode (7.4)
+- **`getMarkdown(id)`** — New API method that converts editor HTML content to Markdown
+- **`setMarkdown(id, md)`** — New API method that parses Markdown and loads it as HTML
+- Full bidirectional HTML ↔ Markdown conversion supporting:
+  - Headings (H1–H4), Paragraphs, Blockquotes
+  - Bold (`**`), Italic (`_`), Strikethrough (`~~`), Inline code (`` ` ``)
+  - Links `[text](url)`, Images `![alt](url)`
+  - Ordered lists, Unordered lists, Task lists (`- [x]`)
+  - Code blocks with language (` ```js `)
+  - Tables with header row and separator
+  - Horizontal rules (`---`)
+- Zero dependencies — built-in converter, no external Markdown library needed
+
 ## [1.0.0] — 2026-09-04
 
 ### Core Editor

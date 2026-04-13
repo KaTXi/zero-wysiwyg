@@ -1023,7 +1023,8 @@
        SLASH COMMANDS (/) — 6.4
        =========================== */
 
-    function getSlashCommands(inst) {
+    function getSlashCommands(inst, customItems) {
+        if (customItems && Array.isArray(customItems)) return customItems;
         return [
             { key: 'paragraph', label: t('slashParagraph'), icon: SVG.paragraph, action: function() { document.execCommand('formatBlock', false, '<P>'); } },
             { key: 'h2', label: t('slashHeading2'), icon: SVG.h2, action: function() { document.execCommand('formatBlock', false, '<H2>'); } },
@@ -1040,9 +1041,9 @@
         ];
     }
 
-    function showSlashMenu(inst, filterText) {
+    function showSlashMenu(inst, filterText, customItems) {
         hideSlashMenu();
-        var commands = getSlashCommands(inst);
+        var commands = getSlashCommands(inst, customItems);
         var q = (filterText || '').toLowerCase();
         var filtered = commands.filter(function(c) {
             return c.label.toLowerCase().indexOf(q) !== -1 || c.key.indexOf(q) !== -1;
@@ -1187,7 +1188,9 @@
             { label: t('deleteCol'), action: function() { tableDeleteCol(table, cell); } },
             { label: t('deleteTable'), action: function() { table.remove(); } },
             { label: '—', action: null },
-            { label: t('toggleHeader'), action: function() { tableToggleHeader(table); } }
+            { label: t('toggleHeader'), action: function() { tableToggleHeader(table); } },
+            { label: '—', action: null },
+            { label: t('bgColor'), action: function() { tableCellBgColor(inst, cell); } }
         ];
 
         for (var i = 0; i < items.length; i++) {
@@ -1273,6 +1276,27 @@
             newCell.innerHTML = oldCell.innerHTML;
             firstRow.replaceChild(newCell, oldCell);
         }
+    }
+
+    function tableCellBgColor(inst, cell) {
+        var input = document.createElement('input');
+        input.type = 'color';
+        input.value = cell.style.backgroundColor ? _rgbToHex(cell.style.backgroundColor) : '#ffffff';
+        input.style.position = 'fixed'; input.style.opacity = '0'; input.style.pointerEvents = 'none';
+        document.body.appendChild(input);
+        input.addEventListener('input', function() {
+            cell.style.backgroundColor = input.value;
+            syncToTextarea(inst);
+        });
+        input.addEventListener('change', function() { input.remove(); });
+        input.click();
+    }
+
+    function _rgbToHex(rgb) {
+        if (rgb.indexOf('#') === 0) return rgb;
+        var match = rgb.match(/\d+/g);
+        if (!match || match.length < 3) return '#ffffff';
+        return '#' + match.slice(0, 3).map(function(x) { return ('0' + parseInt(x).toString(16)).slice(-2); }).join('');
     }
 
     /* ===========================
@@ -1629,7 +1653,7 @@
                     var sText = sSel.anchorNode.textContent.substring(0, sSel.anchorOffset);
                     var slashMatch = sText.match(/(?:^|\s)\/(\S*)$/);
                     if (slashMatch) {
-                        showSlashMenu(instance, slashMatch[1]);
+                        showSlashMenu(instance, slashMatch[1], options.slashItems);
                     } else {
                         hideSlashMenu();
                     }
@@ -1686,6 +1710,21 @@
                 if (e.key === 'Escape') { hideSlashMenu(); return; }
             }
             if (e.key === 'Tab') {
+                // 7.2 Tab in code blocks → insert 4 spaces
+                var codeBlock = getAncestorByClass(editor, 'zw-code-block');
+                if (codeBlock) {
+                    e.preventDefault();
+                    document.execCommand('insertText', false, '    ');
+                    syncToTextarea(instance);
+                    return;
+                }
+                // 7.3 Tab in tables → move to next/prev cell
+                var tableCell = getAncestorTag(editor, 'TD') || getAncestorTag(editor, 'TH');
+                if (tableCell) {
+                    e.preventDefault();
+                    navigateTableCell(tableCell, e.shiftKey ? 'prev' : 'next');
+                    return;
+                }
                 e.preventDefault();
                 if (isInsideList(editor)) {
                     // Inside a list: indent or outdent to create/remove nested lists
@@ -2131,6 +2170,277 @@
     }
 
     /* ===========================
+       DOM HELPERS — 7.2/7.3
+       =========================== */
+
+    function getAncestorByClass(editor, className) {
+        var sel = window.getSelection();
+        if (!sel.rangeCount) return null;
+        var node = sel.anchorNode;
+        while (node && node !== editor) {
+            if (node.nodeType === 1 && node.classList && node.classList.contains(className)) return node;
+            node = node.parentNode;
+        }
+        return null;
+    }
+
+    function getAncestorTag(editor, tagName) {
+        var sel = window.getSelection();
+        if (!sel.rangeCount) return null;
+        var node = sel.anchorNode;
+        while (node && node !== editor) {
+            if (node.nodeType === 1 && node.tagName === tagName) return node;
+            node = node.parentNode;
+        }
+        return null;
+    }
+
+    function navigateTableCell(cell, direction) {
+        var row = cell.parentElement;
+        var table = cell.closest('table');
+        if (!row || !table) return;
+        var idx = cell.cellIndex;
+        var target = null;
+        if (direction === 'next') {
+            if (idx < row.cells.length - 1) { target = row.cells[idx + 1]; }
+            else if (row.nextElementSibling) { target = row.nextElementSibling.cells[0]; }
+        } else {
+            if (idx > 0) { target = row.cells[idx - 1]; }
+            else if (row.previousElementSibling) {
+                var prev = row.previousElementSibling;
+                target = prev.cells[prev.cells.length - 1];
+            }
+        }
+        if (target) {
+            var range = document.createRange();
+            range.selectNodeContents(target);
+            range.collapse(false);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    }
+
+    /* ===========================
+       MARKDOWN CONVERSION — 7.4
+       =========================== */
+
+    function htmlToMarkdown(html) {
+        var tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return _nodeToMd(tmp).replace(/\n{3,}/g, '\n\n').trim();
+    }
+
+    function _nodeToMd(node) {
+        var md = '';
+        for (var i = 0; i < node.childNodes.length; i++) {
+            var child = node.childNodes[i];
+            if (child.nodeType === 3) { md += child.textContent; continue; }
+            if (child.nodeType !== 1) continue;
+            var tag = child.tagName;
+            var inner = _nodeToMd(child);
+            switch (tag) {
+                case 'H1': md += '\n# ' + inner.trim() + '\n'; break;
+                case 'H2': md += '\n## ' + inner.trim() + '\n'; break;
+                case 'H3': md += '\n### ' + inner.trim() + '\n'; break;
+                case 'H4': md += '\n#### ' + inner.trim() + '\n'; break;
+                case 'P': md += '\n' + inner.trim() + '\n'; break;
+                case 'BLOCKQUOTE': md += '\n> ' + inner.trim().replace(/\n/g, '\n> ') + '\n'; break;
+                case 'STRONG': case 'B': md += '**' + inner + '**'; break;
+                case 'EM': case 'I': md += '_' + inner + '_'; break;
+                case 'U': md += '<u>' + inner + '</u>'; break;
+                case 'S': case 'DEL': case 'STRIKE': md += '~~' + inner + '~~'; break;
+                case 'A': md += '[' + inner + '](' + (child.href || '') + ')'; break;
+                case 'IMG': md += '![' + (child.alt || '') + '](' + (child.src || '') + ')'; break;
+                case 'BR': md += '\n'; break;
+                case 'HR': md += '\n---\n'; break;
+                case 'CODE':
+                    if (child.parentElement && child.parentElement.tagName === 'PRE') { md += inner; }
+                    else { md += '`' + inner + '`'; }
+                    break;
+                case 'PRE':
+                    var codeEl = child.querySelector('code');
+                    var lang = '';
+                    if (codeEl) {
+                        var cls = codeEl.className || '';
+                        var m = cls.match(/language-(\w+)/);
+                        if (m) lang = m[1];
+                    }
+                    md += '\n```' + lang + '\n' + (codeEl ? codeEl.textContent : inner) + '\n```\n';
+                    break;
+                case 'UL':
+                    var lis = child.children;
+                    for (var u = 0; u < lis.length; u++) {
+                        if (lis[u].classList && lis[u].classList.contains('zw-task-item')) {
+                            var cb = lis[u].querySelector('input[type="checkbox"]');
+                            md += '\n- [' + (cb && cb.checked ? 'x' : ' ') + '] ' + _nodeToMd(lis[u]).replace(/^\s*/, '').trim();
+                        } else {
+                            md += '\n- ' + _nodeToMd(lis[u]).trim();
+                        }
+                    }
+                    md += '\n';
+                    break;
+                case 'OL':
+                    var olLis = child.children;
+                    for (var o = 0; o < olLis.length; o++) {
+                        md += '\n' + (o + 1) + '. ' + _nodeToMd(olLis[o]).trim();
+                    }
+                    md += '\n';
+                    break;
+                case 'TABLE':
+                    var rows = child.rows;
+                    for (var r = 0; r < rows.length; r++) {
+                        md += '\n|';
+                        for (var c = 0; c < rows[r].cells.length; c++) {
+                            md += ' ' + rows[r].cells[c].textContent.trim() + ' |';
+                        }
+                        if (r === 0) {
+                            md += '\n|';
+                            for (var cc = 0; cc < rows[0].cells.length; cc++) md += ' --- |';
+                        }
+                    }
+                    md += '\n';
+                    break;
+                case 'LI': case 'TBODY': case 'THEAD': case 'TR': case 'TD': case 'TH':
+                case 'DIV': case 'SPAN': case 'SECTION': case 'ARTICLE': case 'LABEL':
+                    md += inner; break;
+                case 'INPUT':
+                    // skip checkboxes (handled in UL)
+                    break;
+                default: md += inner; break;
+            }
+        }
+        return md;
+    }
+
+    function markdownToHtml(md) {
+        var lines = md.split('\n');
+        var html = '';
+        var inCodeBlock = false, codeLang = '', codeContent = '';
+        var inList = false, listType = '';
+
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+
+            // Code blocks
+            if (line.match(/^```/)) {
+                if (inCodeBlock) {
+                    var cls = codeLang ? ' class="language-' + codeLang + '"' : '';
+                    html += '<pre class="zw-code-block"><code' + cls + '>' + escapeHtml(codeContent.trim()) + '</code></pre>';
+                    inCodeBlock = false; codeLang = ''; codeContent = '';
+                } else {
+                    if (inList) { html += listType === 'ul' ? '</ul>' : '</ol>'; inList = false; }
+                    inCodeBlock = true;
+                    codeLang = line.replace(/^```/, '').trim();
+                }
+                continue;
+            }
+            if (inCodeBlock) { codeContent += line + '\n'; continue; }
+
+            // Close list if non-list line
+            if (inList && !line.match(/^(\s*[-*+]\s|^\s*\d+\.\s|^\s*- \[[ x]\])/)) {
+                html += listType === 'ul' ? '</ul>' : '</ol>';
+                inList = false;
+            }
+
+            // Empty line
+            if (line.trim() === '') continue;
+
+            // Headings
+            if (line.match(/^####\s/)) { html += '<h4>' + _inlineMd(line.replace(/^####\s*/, '')) + '</h4>'; continue; }
+            if (line.match(/^###\s/)) { html += '<h3>' + _inlineMd(line.replace(/^###\s*/, '')) + '</h3>'; continue; }
+            if (line.match(/^##\s/)) { html += '<h2>' + _inlineMd(line.replace(/^##\s*/, '')) + '</h2>'; continue; }
+            if (line.match(/^#\s/)) { html += '<h2>' + _inlineMd(line.replace(/^#\s*/, '')) + '</h2>'; continue; }
+
+            // HR
+            if (line.match(/^---+$/)) { html += '<hr>'; continue; }
+
+            // Blockquote
+            if (line.match(/^>\s?/)) { html += '<blockquote>' + _inlineMd(line.replace(/^>\s?/, '')) + '</blockquote>'; continue; }
+
+            // Task list
+            if (line.match(/^- \[[ x]\]\s/)) {
+                if (!inList) { html += '<ul class="zw-task-list">'; inList = true; listType = 'ul'; }
+                var checked = line.match(/^- \[x\]/) ? ' checked' : '';
+                var done = checked ? ' zw-task-done' : '';
+                html += '<li class="zw-task-item' + done + '"><input type="checkbox"' + checked + '> ' + _inlineMd(line.replace(/^- \[[ x]\]\s*/, '')) + '</li>';
+                continue;
+            }
+
+            // Unordered list
+            if (line.match(/^\s*[-*+]\s/)) {
+                if (!inList) { html += '<ul>'; inList = true; listType = 'ul'; }
+                html += '<li>' + _inlineMd(line.replace(/^\s*[-*+]\s/, '')) + '</li>';
+                continue;
+            }
+
+            // Ordered list
+            if (line.match(/^\s*\d+\.\s/)) {
+                if (!inList) { html += '<ol>'; inList = true; listType = 'ol'; }
+                html += '<li>' + _inlineMd(line.replace(/^\s*\d+\.\s/, '')) + '</li>';
+                continue;
+            }
+
+            // Table
+            if (line.match(/^\|/)) {
+                if (lines[i + 1] && lines[i + 1].match(/^\|[\s-|]+$/)) {
+                    // Header row
+                    html += '<table><tr>';
+                    var cells = line.split('|').filter(function(c) { return c.trim(); });
+                    for (var c = 0; c < cells.length; c++) html += '<th>' + _inlineMd(cells[c].trim()) + '</th>';
+                    html += '</tr>';
+                    i++; // skip separator
+                    // Body rows
+                    while (i + 1 < lines.length && lines[i + 1].match(/^\|/)) {
+                        i++;
+                        var bcells = lines[i].split('|').filter(function(c) { return c.trim(); });
+                        html += '<tr>';
+                        for (var bc = 0; bc < bcells.length; bc++) html += '<td>' + _inlineMd(bcells[bc].trim()) + '</td>';
+                        html += '</tr>';
+                    }
+                    html += '</table>';
+                    continue;
+                }
+            }
+
+            // Paragraph
+            html += '<p>' + _inlineMd(line) + '</p>';
+        }
+        if (inList) html += listType === 'ul' ? '</ul>' : '</ol>';
+        if (inCodeBlock) html += '<pre class="zw-code-block"><code>' + escapeHtml(codeContent.trim()) + '</code></pre>';
+        return html;
+    }
+
+    function _inlineMd(text) {
+        // Images: ![alt](url)
+        text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%" />');
+        // Links: [text](url)
+        text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+        // Bold: **text** or __text__
+        text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        text = text.replace(/__(.+?)__/g, '<strong>$1</strong>');
+        // Italic: *text* or _text_
+        text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+        text = text.replace(/_(.+?)_/g, '<em>$1</em>');
+        // Strikethrough: ~~text~~
+        text = text.replace(/~~(.+?)~~/g, '<s>$1</s>');
+        // Inline code: `text`
+        text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+        return text;
+    }
+
+    /* ===========================
+       MARKDOWN MODE API — 7.4
+       =========================== */
+
+    function getMarkdown(textareaId) {
+        var inst = instances[textareaId];
+        if (!inst) return '';
+        var html = placeholdersToIframes(inst.editor.innerHTML);
+        return htmlToMarkdown(html);
+    }
+
+    /* ===========================
        SYNC & UTILITIES
        =========================== */
 
@@ -2266,12 +2576,23 @@
         delete instances[textareaId];
     }
 
+    function setMarkdown(textareaId, md) {
+        var inst = instances[textareaId];
+        if (!inst) return;
+        var html = markdownToHtml(md);
+        if (inst.isSourceMode) { inst.sourceView.value = html; }
+        else { inst.editor.innerHTML = iframesToPlaceholders(html); }
+        syncToTextarea(inst);
+    }
+
     return {
         init: init,
         getInstance: getInstance,
         destroy: destroy,
         getHTML: getHTML,
         setHTML: setHTML,
+        getMarkdown: getMarkdown,
+        setMarkdown: setMarkdown,
         isEmpty: isEmpty,
         focus: focus,
         enable: enable,

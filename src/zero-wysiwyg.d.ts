@@ -205,6 +205,16 @@ declare namespace ZeroWysiwyg {
     function setHTML(textareaId: string, html: string): void;
 
     /**
+     * Returns the editor content converted to Markdown.
+     */
+    function getMarkdown(textareaId: string): string;
+
+    /**
+     * Sets the editor content from a Markdown string.
+     */
+    function setMarkdown(textareaId: string, md: string): void;
+
+    /**
      * Returns true if the editor has no text content.
      */
     function isEmpty(textareaId: string): boolean;
