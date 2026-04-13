@@ -58,8 +58,8 @@
     <script src="../src/zero-wysiwyg.js"></script>
     <script>
         // Initialize two editors at page load
-        ZeroWysiwyg.init('editor1', { height: '200px', wordCount: true, slashCommands: true });
-        ZeroWysiwyg.init('editor2', { height: '200px', locale: 'es', theme: 'dark', toolbarMode: 'both', slashCommands: true });
+        ZeroWysiwyg.init('editor1', { height: '200px', wordCount: true, slashCommands: true, autoLink: true });
+        ZeroWysiwyg.init('editor2', { height: '200px', locale: 'es', theme: 'dark', toolbarMode: 'both', slashCommands: true, autoLink: true });
 
         // Dynamic create/destroy
         function createEditor3() {

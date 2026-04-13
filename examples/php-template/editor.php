@@ -91,7 +91,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         height: '350px',
         locale: 'en',
         wordCount: true,
-        slashCommands: true
+        slashCommands: true,
+        autoLink: true
     });
 </script>
 </body>

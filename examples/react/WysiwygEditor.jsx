@@ -5,6 +5,11 @@
  *   import WysiwygEditor from './WysiwygEditor';
  *   <WysiwygEditor id="content" height="400px" locale="en" theme="dark" onChange={setHtml} />
  *
+ * v1.1.0 features:
+ *   - slashItems: custom slash command items array
+ *   - autoLink: auto-convert pasted URLs to links
+ *   - getMarkdown/setMarkdown via ref or window.ZeroWysiwyg API
+ *
  * Requirements:
  *   - Include zero-wysiwyg.css in your HTML or import it
  *   - Include zero-wysiwyg.js before your React bundle, or import it
@@ -20,6 +25,8 @@ export default function WysiwygEditor({
     wordCount = false,
     toolbarMode = 'top',
     slashCommands = false,
+    slashItems = null,
+    autoLink = false,
     onChange = null,
     onReady = null,
     onFocus = null,
@@ -41,19 +48,26 @@ export default function WysiwygEditor({
             return;
         }
 
-        const inst = window.ZeroWysiwyg.init(id, {
+        const opts = {
             height,
             locale,
             theme,
             wordCount,
             toolbarMode,
             slashCommands,
+            autoLink,
             onChange: handleChange,
             onReady,
             onFocus,
             onBlur,
-        });
+        };
 
+        // Add custom slash items if provided
+        if (slashItems && slashItems.length > 0) {
+            opts.slashItems = slashItems;
+        }
+
+        window.ZeroWysiwyg.init(id, opts);
         initialized.current = true;
 
         return () => {
@@ -85,3 +99,23 @@ export default function WysiwygEditor({
         </div>
     );
 }
+
+/**
+ * Helper hooks for accessing Markdown API:
+ *
+ * // Get Markdown from the editor
+ * const md = window.ZeroWysiwyg.getMarkdown('editor');
+ *
+ * // Set Markdown into the editor (converts to HTML)
+ * window.ZeroWysiwyg.setMarkdown('editor', '# Hello\n**Bold** text');
+ *
+ * // Example: submit both HTML and Markdown
+ * function handleSubmit() {
+ *     const html = window.ZeroWysiwyg.getHTML('editor');
+ *     const markdown = window.ZeroWysiwyg.getMarkdown('editor');
+ *     fetch('/api/articles', {
+ *         method: 'POST',
+ *         body: JSON.stringify({ html, markdown })
+ *     });
+ * }
+ */

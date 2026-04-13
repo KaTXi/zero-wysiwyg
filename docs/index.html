@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zero WYSIWYG — Live Demo</title>
     <meta name="description" content="A lightweight, zero-dependency WYSIWYG HTML editor with 35+ built-in features. Try it live!">
+<<<<<<< HEAD
     <link rel="stylesheet" href="https://unpkg.com/zero-wysiwyg/src/zero-wysiwyg.css">
     <link rel="stylesheet" href="https://unpkg.com/zero-wysiwyg/src/themes/dark.css">
+=======
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/KaTXi/zero-wysiwyg@main/src/zero-wysiwyg.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/KaTXi/zero-wysiwyg@main/src/themes/dark.css">
+>>>>>>> 3e0a09c (feat: v1.1.0 — Markdown mode, custom slashItems, cell bg color, Tab enhancements, updated examples)
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -129,6 +134,11 @@
     <span class="pill">💬 Balloon Toolbar</span>
     <span class="pill">🌙 Dark Theme</span>
     <span class="pill">🌐 7 Languages</span>
+<<<<<<< HEAD
+=======
+    <span class="pill">📝 Markdown Export</span>
+    <span class="pill">🔗 Auto-Link</span>
+>>>>>>> 3e0a09c (feat: v1.1.0 — Markdown mode, custom slashItems, cell bg color, Tab enhancements, updated examples)
 </div>
 
 <div class="controls">
@@ -190,7 +200,12 @@ const editor = ZeroWysiwyg.init('myEditor', {
 </div>
 
 <div class="output-section">
+<<<<<<< HEAD
     <button class="output-toggle" onclick="toggleOutput()">📄 Show HTML Output</button>
+=======
+    <button class="output-toggle" onclick="toggleOutput('html')">📄 Show HTML Output</button>
+    <button class="output-toggle" onclick="toggleOutput('md')" style="margin-left:8px">📝 Show Markdown</button>
+>>>>>>> 3e0a09c (feat: v1.1.0 — Markdown mode, custom slashItems, cell bg color, Tab enhancements, updated examples)
     <pre class="output-box" id="outputBox"></pre>
 </div>
 
@@ -201,7 +216,11 @@ const editor = ZeroWysiwyg.init('myEditor', {
     </p>
 </div>
 
+<<<<<<< HEAD
 <script src="https://unpkg.com/zero-wysiwyg/src/zero-wysiwyg.js"></script>
+=======
+<script src="https://cdn.jsdelivr.net/gh/KaTXi/zero-wysiwyg@main/src/zero-wysiwyg.js"></script>
+>>>>>>> 3e0a09c (feat: v1.1.0 — Markdown mode, custom slashItems, cell bg color, Tab enhancements, updated examples)
 <script>
     var currentEditor = null;
 
@@ -230,20 +249,48 @@ const editor = ZeroWysiwyg.init('myEditor', {
             theme: theme === 'dark' ? 'dark' : undefined,
             toolbarMode: balloon ? 'both' : 'top',
             slashCommands: slash,
+<<<<<<< HEAD
+=======
+            autoLink: true,
+>>>>>>> 3e0a09c (feat: v1.1.0 — Markdown mode, custom slashItems, cell bg color, Tab enhancements, updated examples)
             wordCount: wc,
             onChange: function(html) {
                 var box = document.getElementById('outputBox');
                 if (box.classList.contains('visible')) {
+<<<<<<< HEAD
                     box.textContent = html;
+=======
+                    if (outputMode === 'md') {
+                        box.textContent = ZeroWysiwyg.getMarkdown('editor');
+                    } else {
+                        box.textContent = html;
+                    }
+>>>>>>> 3e0a09c (feat: v1.1.0 — Markdown mode, custom slashItems, cell bg color, Tab enhancements, updated examples)
                 }
             }
         });
     }
 
+<<<<<<< HEAD
     function toggleOutput() {
         var box = document.getElementById('outputBox');
         box.classList.toggle('visible');
         if (box.classList.contains('visible')) {
+=======
+    var outputMode = '';
+    function toggleOutput(type) {
+        var box = document.getElementById('outputBox');
+        if (outputMode === type && box.classList.contains('visible')) {
+            box.classList.remove('visible');
+            outputMode = '';
+            return;
+        }
+        outputMode = type;
+        box.classList.add('visible');
+        if (type === 'md') {
+            box.textContent = ZeroWysiwyg.getMarkdown('editor');
+        } else {
+>>>>>>> 3e0a09c (feat: v1.1.0 — Markdown mode, custom slashItems, cell bg color, Tab enhancements, updated examples)
             box.textContent = ZeroWysiwyg.getHTML('editor');
         }
     }

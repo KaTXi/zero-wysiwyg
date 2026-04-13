@@ -30,8 +30,11 @@
         • <strong>Buscar y reemplazar</strong>: Pulsa <kbd>Ctrl+F</kbd><br>
         • <strong>Listas de tareas</strong>: Usa el botón ☑ del toolbar<br>
         • <strong>Bloques de código</strong>: Botón <kbd>&lt;/&gt;</kbd> con selector de lenguaje<br>
-        • <strong>Edición de tablas</strong>: Clic derecho en una celda para añadir/eliminar filas y columnas<br>
-        • <strong>Emojis</strong>: 320+ emojis integrados con búsqueda
+        • <strong>Edición de tablas</strong>: Clic derecho en una celda para añadir/eliminar filas y columnas + <strong>color de fondo de celda</strong><br>
+        • <strong>Navegación de tablas</strong>: Pulsa <kbd>Tab</kbd> / <kbd>Shift+Tab</kbd> para moverte entre celdas<br>
+        • <strong>Emojis</strong>: 320+ emojis integrados con búsqueda<br>
+        • <strong>Auto-enlace</strong>: Pega una URL y se convierte en enlace automáticamente<br>
+        • <strong>Markdown</strong>: Exporta el contenido como Markdown con <code>ZeroWysiwyg.getMarkdown()</code>
     </div>
 
     <textarea id="editor" name="content" style="width:100%">
@@ -70,6 +73,7 @@
             toolbarMode: 'both',
             wordCount: true,
             slashCommands: true,
+            autoLink: true,
             onChange: function(html) {
                 document.getElementById('htmlOutput').textContent = html;
             }

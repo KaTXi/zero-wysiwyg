@@ -1,6 +1,6 @@
 {
   "name": "zero-wysiwyg",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A lightweight, zero-dependency WYSIWYG HTML editor with built-in YouTube embeds, image resize, dark/light themes, and i18n",
   "main": "dist/zero-wysiwyg.min.js",
   "module": "src/zero-wysiwyg.js",

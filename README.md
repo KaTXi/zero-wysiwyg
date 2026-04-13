@@ -4,6 +4,14 @@
 [![license](https://img.shields.io/npm/l/zero-wysiwyg.svg)](https://github.com/KaTXi/zero-wysiwyg/blob/main/LICENSE)
 [![zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](https://www.npmjs.com/package/zero-wysiwyg)
 [![bundle size](https://img.shields.io/badge/bundle-~120KB-blue.svg)](https://github.com/KaTXi/zero-wysiwyg)
+<<<<<<< HEAD
+=======
+
+A lightweight, **zero-dependency** WYSIWYG HTML editor with **35+ built-in features**.  
+Tables, code blocks, YouTube embeds, slash commands, emoji picker, balloon toolbar, find & replace, dark/light themes, and 7 languages — all with **zero dependencies**.
+
+**[Live Demo](https://katxi.github.io/zero-wysiwyg/)** · **[npm](https://www.npmjs.com/package/zero-wysiwyg)** · **[GitHub](https://github.com/KaTXi/zero-wysiwyg)**
+>>>>>>> 3e0a09c (feat: v1.1.0 — Markdown mode, custom slashItems, cell bg color, Tab enhancements, updated examples)
 
 A lightweight, **zero-dependency** WYSIWYG HTML editor with **35+ built-in features**.  
 Tables, code blocks, YouTube embeds, slash commands, emoji picker, balloon toolbar, find & replace, dark/light themes, and 7 languages — all with **zero dependencies**.
@@ -165,6 +173,14 @@ Returns the cleaned HTML content of the editor.
 ### `ZeroWysiwyg.setHTML(textareaId, html)`
 
 Programmatically sets the editor content.
+
+### `ZeroWysiwyg.getMarkdown(textareaId)`
+
+Returns the editor content converted to Markdown. Supports headings, bold, italic, strikethrough, links, images, lists, task lists, code blocks, tables, blockquotes, and horizontal rules.
+
+### `ZeroWysiwyg.setMarkdown(textareaId, md)`
+
+Sets the editor content from a Markdown string. Parses Markdown to HTML and loads it into the editor.
 
 ### `ZeroWysiwyg.isEmpty(textareaId)`
 

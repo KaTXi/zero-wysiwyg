@@ -21,7 +21,7 @@
 </head>
 <body>
     <h1>Zero WYSIWYG — Form Integration</h1>
-    <p class="desc">The editor syncs to a hidden &lt;textarea&gt;, so standard form submission just works. No extra JavaScript needed.</p>
+    <p class="desc">The editor syncs to a hidden &lt;textarea&gt;, so standard form submission just works. No extra JavaScript needed. You can also submit Markdown alongside HTML.</p>
 
     <form id="articleForm" onsubmit="return handleSubmit(event)">
         <div class="form-group">
@@ -37,6 +37,9 @@
             </textarea>
         </div>
 
+        <!-- Hidden field to also submit the Markdown version -->
+        <input type="hidden" id="bodyMarkdown" name="body_markdown" value="">
+
         <button type="submit" class="btn-submit">Submit Article</button>
     </form>
 
@@ -47,10 +50,17 @@
 
     <script src="../src/zero-wysiwyg.js"></script>
     <script>
-        ZeroWysiwyg.init('body', { height: '300px', wordCount: true, slashCommands: true });
+        ZeroWysiwyg.init('body', {
+            height: '300px',
+            wordCount: true,
+            slashCommands: true,
+            autoLink: true
+        });
 
         function handleSubmit(e) {
             e.preventDefault();
+            // Sync the markdown hidden field before reading form data
+            document.getElementById('bodyMarkdown').value = ZeroWysiwyg.getMarkdown('body');
             var fd = new FormData(e.target);
             var data = {};
             fd.forEach(function(val, key) { data[key] = val; });

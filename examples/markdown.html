@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero WYSIWYG — Markdown Mode</title>
+    <link rel="stylesheet" href="../src/zero-wysiwyg.css">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; color: #333; }
+        h1 { margin-bottom: 8px; }
+        p.desc { color: #666; margin-bottom: 24px; }
+        .info { margin-bottom: 24px; padding: 16px 20px; background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; font-size: 13px; line-height: 1.8; }
+        .info h3 { margin: 0 0 8px; font-size: 14px; color: #16a34a; }
+        .info code { background: #dcfce7; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+        .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px; }
+        .panel { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+        .panel-header { padding: 10px 16px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .panel-header span { font-size: 12px; color: #888; font-weight: 400; }
+        .panel pre { padding: 16px; margin: 0; font-family: 'Fira Code', Consolas, monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; min-height: 200px; max-height: 400px; overflow-y: auto; background: #fff; }
+        .panel textarea { width: 100%; min-height: 200px; max-height: 400px; padding: 16px; font-family: 'Fira Code', Consolas, monospace; font-size: 12px; border: none; resize: vertical; box-sizing: border-box; }
+        .btn-row { display: flex; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #2563eb; color: #fff; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .btn-secondary:hover { background: #e2e8f0; }
+        .btn-success { background: #16a34a; color: #fff; }
+        .btn-success:hover { background: #15803d; }
+        @media (max-width: 700px) { .panels { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <h1>Zero WYSIWYG — Markdown Mode</h1>
+    <p class="desc">Bidirectional HTML ↔ Markdown conversion. Write in the WYSIWYG editor, export Markdown — or paste Markdown and import it as rich HTML.</p>
+
+    <div class="info">
+        <h3>📝 Markdown API</h3>
+        • <code>ZeroWysiwyg.getMarkdown('id')</code> — Export the editor's HTML content as Markdown<br>
+        • <code>ZeroWysiwyg.setMarkdown('id', md)</code> — Import Markdown into the editor as rich HTML<br>
+        • Supports: headings, bold, italic, strikethrough, links, images, lists, task lists, blockquotes, code blocks, inline code, tables, and horizontal rules
+    </div>
+
+    <textarea id="editor" style="width:100%">
+        <h2>Markdown Conversion Demo</h2>
+        <p>This content can be <strong>exported as Markdown</strong> and <em>imported back</em> seamlessly.</p>
+        <h3>Features Supported</h3>
+        <ul>
+            <li><strong>Bold</strong>, <em>italic</em>, <del>strikethrough</del>, and <code>inline code</code></li>
+            <li><a href="https://github.com/KaTXi/zero-wysiwyg">Links with URLs</a></li>
+            <li>Ordered and unordered lists</li>
+            <li>Tables with alignment</li>
+        </ul>
+        <h3>Task List</h3>
+        <ul class="zw-task-list">
+            <li class="zw-task-item"><input type="checkbox" checked> Export this as Markdown</li>
+            <li class="zw-task-item"><input type="checkbox"> Edit the Markdown below</li>
+            <li class="zw-task-item"><input type="checkbox"> Import it back into the editor</li>
+        </ul>
+        <h3>Code Example</h3>
+        <pre class="zw-code-block"><code class="language-javascript">const md = ZeroWysiwyg.getMarkdown('editor');
+console.log(md);
+
+// Import markdown back
+ZeroWysiwyg.setMarkdown('editor', '# Hello\n**Bold** and *italic*');</code></pre>
+        <blockquote>Tip: The Markdown conversion preserves formatting, links, images, tables, and code blocks.</blockquote>
+    </textarea>
+
+    <div class="btn-row">
+        <button class="btn btn-primary" onclick="exportMarkdown()">⬇️ Export as Markdown</button>
+        <button class="btn btn-success" onclick="importMarkdown()">⬆️ Import Markdown into Editor</button>
+        <button class="btn btn-secondary" onclick="loadSample()">📄 Load Sample Markdown</button>
+    </div>
+
+    <div class="panels">
+        <div class="panel">
+            <div class="panel-header">📄 Markdown <span>(editable — click "Import" to load into editor)</span></div>
+            <textarea id="mdPanel" placeholder="Click 'Export as Markdown' or paste your own Markdown here, then click 'Import'..."></textarea>
+        </div>
+        <div class="panel">
+            <div class="panel-header">🔤 HTML Output <span>(read-only)</span></div>
+            <pre id="htmlPanel"></pre>
+        </div>
+    </div>
+
+    <script src="../src/zero-wysiwyg.js"></script>
+    <script>
+        ZeroWysiwyg.init('editor', {
+            height: '350px',
+            wordCount: true,
+            slashCommands: true,
+            autoLink: true,
+            onChange: function(html) {
+                document.getElementById('htmlPanel').textContent = html;
+            }
+        });
+
+        // Initial HTML output
+        document.getElementById('htmlPanel').textContent = ZeroWysiwyg.getHTML('editor');
+
+        function exportMarkdown() {
+            var md = ZeroWysiwyg.getMarkdown('editor');
+            document.getElementById('mdPanel').value = md;
+        }
+
+        function importMarkdown() {
+            var md = document.getElementById('mdPanel').value;
+            if (!md.trim()) {
+                alert('Paste or type some Markdown in the left panel first!');
+                return;
+            }
+            ZeroWysiwyg.setMarkdown('editor', md);
+            document.getElementById('htmlPanel').textContent = ZeroWysiwyg.getHTML('editor');
+        }
+
+        function loadSample() {
+            var sample = [
+                '# Sample Markdown Document',
+                '',
+                'This is a **bold** and *italic* text with `inline code` and ~~strikethrough~~.',
+                '',
+                '## Links & Images',
+                '',
+                '[Visit GitHub](https://github.com/KaTXi/zero-wysiwyg)',
+                '',
+                '![Alt text](https://via.placeholder.com/200x100)',
+                '',
+                '## Lists',
+                '',
+                '- First item',
+                '- Second item with **bold**',
+                '  - Nested item',
+                '- Third item',
+                '',
+                '1. Step one',
+                '2. Step two',
+                '3. Step three',
+                '',
+                '## Task List',
+                '',
+                '- [x] Completed task',
+                '- [ ] Pending task',
+                '- [ ] Another pending task',
+                '',
+                '## Code Block',
+                '',
+                '```python',
+                'def greet(name):',
+                '    return f"Hello, {name}!"',
+                '',
+                'print(greet("World"))',
+                '```',
+                '',
+                '## Blockquote',
+                '',
+                '> This is a blockquote.',
+                '> It can span multiple lines.',
+                '',
+                '## Table',
+                '',
+                '| Feature | Status | Notes |',
+                '| --- | --- | --- |',
+                '| Bold | ✅ | `**text**` |',
+                '| Italic | ✅ | `*text*` |',
+                '| Tables | ✅ | GFM syntax |',
+                '',
+                '---',
+                '',
+                '*That\'s all! Click "Import" to load this into the editor.*'
+            ].join('\n');
+            document.getElementById('mdPanel').value = sample;
+        }
+    </script>
+</body>
+</html>
