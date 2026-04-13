@@ -11,7 +11,7 @@ A lightweight, **zero-dependency** WYSIWYG HTML editor with **35+ built-in featu
 Tables, code blocks, YouTube embeds, slash commands, emoji picker, balloon toolbar, find & replace, dark/light themes, and 7 languages — all with **zero dependencies**.
 
 **[Live Demo](https://katxi.github.io/zero-wysiwyg/)** · **[npm](https://www.npmjs.com/package/zero-wysiwyg)** · **[GitHub](https://github.com/KaTXi/zero-wysiwyg)**
->>>>>>> 3e0a09c (feat: v1.1.0 — Markdown mode, custom slashItems, cell bg color, Tab enhancements, updated examples)
+(feat: v1.1.0 — Markdown mode, custom slashItems, cell bg color, Tab enhancements, updated examples)
 
 A lightweight, **zero-dependency** WYSIWYG HTML editor with **35+ built-in features**.  
 Tables, code blocks, YouTube embeds, slash commands, emoji picker, balloon toolbar, find & replace, dark/light themes, and 7 languages — all with **zero dependencies**.
