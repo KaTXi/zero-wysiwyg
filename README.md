@@ -4,7 +4,6 @@
 [![license](https://img.shields.io/npm/l/zero-wysiwyg.svg)](https://github.com/KaTXi/zero-wysiwyg/blob/main/LICENSE)
 [![zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](https://www.npmjs.com/package/zero-wysiwyg)
 [![bundle size](https://img.shields.io/badge/bundle-~120KB-blue.svg)](https://github.com/KaTXi/zero-wysiwyg)
-<<<<<<< HEAD
 =======
 
 A lightweight, **zero-dependency** WYSIWYG HTML editor with **35+ built-in features**.  
