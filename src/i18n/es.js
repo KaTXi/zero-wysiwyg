@@ -46,5 +46,6 @@ ZeroWysiwyg.locales.es = {
     addRowAbove: 'Añadir fila arriba', addRowBelow: 'Añadir fila abajo',
     addColLeft: 'Añadir columna izquierda', addColRight: 'Añadir columna derecha',
     deleteRow: 'Eliminar fila', deleteCol: 'Eliminar columna', deleteTable: 'Eliminar tabla',
-    toggleHeader: 'Alternar fila encabezado'
+    toggleHeader: 'Alternar fila encabezado',
+    wordSingular: 'palabra', wordPlural: 'palabras', charLabel: 'caracteres'
 };

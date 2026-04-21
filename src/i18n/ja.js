@@ -46,5 +46,6 @@ ZeroWysiwyg.locales.ja = {
     addRowAbove: '上に行を追加', addRowBelow: '下に行を追加',
     addColLeft: '左に列を追加', addColRight: '右に列を追加',
     deleteRow: '行を削除', deleteCol: '列を削除', deleteTable: '表を削除',
-    toggleHeader: 'ヘッダー行の切り替え'
+    toggleHeader: 'ヘッダー行の切り替え',
+    wordSingular: '語', wordPlural: '語', charLabel: '文字'
 };

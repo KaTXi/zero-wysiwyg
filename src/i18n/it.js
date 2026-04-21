@@ -46,5 +46,6 @@ ZeroWysiwyg.locales.it = {
     addRowAbove: 'Aggiungi riga sopra', addRowBelow: 'Aggiungi riga sotto',
     addColLeft: 'Aggiungi colonna a sinistra', addColRight: 'Aggiungi colonna a destra',
     deleteRow: 'Elimina riga', deleteCol: 'Elimina colonna', deleteTable: 'Elimina tabella',
-    toggleHeader: 'Attiva/disattiva riga intestazione'
+    toggleHeader: 'Attiva/disattiva riga intestazione',
+    wordSingular: 'parola', wordPlural: 'parole', charLabel: 'caratteri'
 };

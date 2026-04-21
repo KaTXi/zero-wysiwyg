@@ -5,24 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] — 2026-04-21
+
+### Table Column Resize
+- **Drag-to-resize table columns** — Hover near any column border to see a `col-resize` cursor, then click and drag to adjust column widths
+- Automatically sets explicit pixel widths on first drag for predictable resizing
+- Full-viewport transparent overlay captures mouse during drag for smooth interaction
+- Minimum column width of 30px enforced
+- Adjacent columns resize inversely (total table width preserved)
+- Column widths persist in the HTML output
+
+### Security Fix: Markdown URL Protocol Whitelist
+- **`_safeUrl()` protocol whitelist** — Blocks `javascript:`, `data:`, `vbscript:` and other dangerous URL schemes in Markdown link/image conversion
+- Allows: `http:`, `https:`, `mailto:`, `tel:`, `#` anchors, `/` absolute paths, `.` relative paths, and URLs with no protocol (relative)
+- `setMarkdown('[click](javascript:alert(1))')` now produces `href="#"` instead of executing the script
+- Applied to both `[text](url)` links and `![alt](url)` images in Markdown→HTML conversion
+
+### destroy() Listener Cleanup
+- **Fixed memory leak**: `destroy()` now properly removes all document-level event listeners
+  - `selectionchange` handler (toolbar active-state tracking)
+  - Balloon toolbar `mousedown` handler (click-outside-to-close)
+  - Fullscreen `keydown` Escape handler
+- Also calls `hideBalloonToolbar()` and `hideSlashMenu()` on destroy to clean up any open UI
+- Critical for multi-editor pages (adminNew review forms with up to 6 editors)
+
+### Per-Instance Locale
+- **Locale is now stored per-instance** — Two editors on the same page can have different languages
+- `t(key, inst)` translation helper now accepts an optional instance parameter
+- Each instance stores `_locale` from the `locale` option passed to `init()`
+- Backward compatible: global `_locale` still works as fallback for non-instance calls
+
+### Word Count i18n
+- **Word count status bar now uses the i18n system** — no longer hardcoded English
+- Added `wordSingular`, `wordPlural`, `charLabel` keys to EN and ES locales
+- EN: "107 words · 677 chars" / ES: "107 palabras · 677 caracteres"
+- Uses per-instance locale, so a Spanish editor shows Spanish word count
+
 ## [1.1.0] — 2026-04-12
 
-### Custom Slash Commands (6.4)
+### Custom Slash Commands
 - **`slashItems` option** — Pass custom command arrays to `slashCommands` to override the default 12 commands
 
-### Cell Background Color (7.3)
+### Cell Background Color
 - **Cell background color** in table right-click context menu — uses native color picker
 
-### Enhanced Code Blocks (7.2)
+### Enhanced Code Blocks
 - **Tab key inserts 4 spaces** inside code blocks instead of changing focus
 - Code blocks now behave like a proper code editor for indentation
 
-### Enhanced Table Editing (7.3)
+### Enhanced Table Editing
 - **Tab/Shift+Tab navigates between table cells** — Tab moves to next cell, Shift+Tab to previous
 - Wraps around rows (last cell → first cell of next row)
 - New helper functions: `getAncestorByClass`, `getAncestorTag`, `navigateTableCell`
 
-### Markdown Mode (7.4)
+### Markdown Mode
 - **`getMarkdown(id)`** — New API method that converts editor HTML content to Markdown
 - **`setMarkdown(id, md)`** — New API method that parses Markdown and loads it as HTML
 - Full bidirectional HTML ↔ Markdown conversion supporting:

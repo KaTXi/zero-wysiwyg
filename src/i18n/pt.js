@@ -46,5 +46,6 @@ ZeroWysiwyg.locales.pt = {
     addRowAbove: 'Adicionar linha acima', addRowBelow: 'Adicionar linha abaixo',
     addColLeft: 'Adicionar coluna à esquerda', addColRight: 'Adicionar coluna à direita',
     deleteRow: 'Excluir linha', deleteCol: 'Excluir coluna', deleteTable: 'Excluir tabela',
-    toggleHeader: 'Alternar linha cabeçalho'
+    toggleHeader: 'Alternar linha cabeçalho',
+    wordSingular: 'palavra', wordPlural: 'palavras', charLabel: 'caracteres'
 };

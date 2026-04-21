@@ -129,7 +129,8 @@
         addRowAbove: 'Add row above', addRowBelow: 'Add row below',
         addColLeft: 'Add column left', addColRight: 'Add column right',
         deleteRow: 'Delete row', deleteCol: 'Delete column', deleteTable: 'Delete table',
-        toggleHeader: 'Toggle header row'
+        toggleHeader: 'Toggle header row',
+        wordSingular: 'word', wordPlural: 'words', charLabel: 'chars'
     };
     locales.es = {
         bold: 'Negrita (Ctrl+B)', italic: 'Cursiva (Ctrl+I)', underline: 'Subrayado (Ctrl+U)',
@@ -176,10 +177,20 @@
         addRowAbove: 'Añadir fila arriba', addRowBelow: 'Añadir fila abajo',
         addColLeft: 'Añadir columna izquierda', addColRight: 'Añadir columna derecha',
         deleteRow: 'Eliminar fila', deleteCol: 'Eliminar columna', deleteTable: 'Eliminar tabla',
-        toggleHeader: 'Alternar fila encabezado'
+        toggleHeader: 'Alternar fila encabezado',
+        wordSingular: 'palabra', wordPlural: 'palabras', charLabel: 'caracteres'
     };
     var _locale = 'en';
-    function t(key) { var loc = locales[_locale] || locales.en; return loc[key] || locales.en[key] || key; }
+    /**
+     * Translation helper. Supports per-instance locale when an instance is passed.
+     * @param {string} key - Locale string key
+     * @param {object} [inst] - Optional editor instance for per-instance locale
+     */
+    function t(key, inst) {
+        var code = (inst && inst._locale) ? inst._locale : _locale;
+        var loc = locales[code] || locales.en;
+        return loc[key] || locales.en[key] || key;
+    }
 
     function getToolbarGroups() {
         return [
@@ -1300,6 +1311,158 @@
     }
 
     /* ===========================
+       TABLE COLUMN RESIZE — 7.3
+       =========================== */
+
+    /**
+     * Initialises column-resize functionality for tables inside the editor.
+     * When the user hovers near a column border (within 5 px), the cursor
+     * changes to col-resize.  Dragging adjusts the two adjacent columns.
+     */
+    function initTableColResize(inst) {
+        var EDGE_PX = 5;           // proximity threshold to column border
+        var dragging = false;
+        var dragCol = -1;          // index of the LEFT column being resized
+        var dragTable = null;
+        var startX = 0;
+        var startWidths = [];      // [leftColW, rightColW] at drag start
+        var overlay = null;
+
+        // --- helpers ---
+        function getCellBorders(table, row) {
+            // Returns array of { x, colIdx } for every right-edge of a cell in `row`
+            var cells = row.cells;
+            var borders = [];
+            for (var c = 0; c < cells.length - 1; c++) {
+                var rect = cells[c].getBoundingClientRect();
+                borders.push({ x: rect.right, colIdx: c });
+            }
+            return borders;
+        }
+
+        function findNearBorder(table, clientX, clientY) {
+            // Walk the first visible row to detect a column border near the cursor
+            var rows = table.rows;
+            for (var r = 0; r < rows.length; r++) {
+                var rowRect = rows[r].getBoundingClientRect();
+                if (clientY >= rowRect.top && clientY <= rowRect.bottom) {
+                    var borders = getCellBorders(table, rows[r]);
+                    for (var b = 0; b < borders.length; b++) {
+                        if (Math.abs(clientX - borders[b].x) <= EDGE_PX) {
+                            return borders[b].colIdx;
+                        }
+                    }
+                    break;
+                }
+            }
+            return -1;
+        }
+
+        function ensureColWidths(table) {
+            // Make sure every column has an explicit pixel width so resizing works predictably
+            var firstRow = table.rows[0];
+            if (!firstRow) return;
+            var cells = firstRow.cells;
+            // If already set, skip
+            if (cells[0] && cells[0].style.width && cells[0].style.width.indexOf('px') > -1) return;
+            for (var c = 0; c < cells.length; c++) {
+                var w = cells[c].getBoundingClientRect().width;
+                cells[c].style.width = w + 'px';
+            }
+            table.style.width = table.getBoundingClientRect().width + 'px';
+        }
+
+        function setColWidth(table, colIdx, width) {
+            var rows = table.rows;
+            var minW = 30;
+            if (width < minW) width = minW;
+            for (var r = 0; r < rows.length; r++) {
+                if (rows[r].cells[colIdx]) {
+                    rows[r].cells[colIdx].style.width = width + 'px';
+                }
+            }
+        }
+
+        function getColWidth(table, colIdx) {
+            var firstRow = table.rows[0];
+            if (!firstRow || !firstRow.cells[colIdx]) return 0;
+            return firstRow.cells[colIdx].getBoundingClientRect().width;
+        }
+
+        function createOverlay() {
+            var el = document.createElement('div');
+            el.className = 'zw-col-resize-overlay';
+            document.body.appendChild(el);
+            return el;
+        }
+
+        // --- mouse handlers ---
+        function getTargetElement(e) {
+            var el = e.target;
+            if (el.nodeType === 3) el = el.parentElement; // text nodes don't have closest()
+            return el;
+        }
+
+        inst.editor.addEventListener('mousemove', function(e) {
+            if (dragging) return;
+            var el = getTargetElement(e);
+            if (!el) { inst.editor.style.cursor = ''; return; }
+            var table = el.closest ? el.closest('table') : null;
+            if (!table || !inst.editor.contains(table)) {
+                inst.editor.style.cursor = '';
+                return;
+            }
+            var col = findNearBorder(table, e.clientX, e.clientY);
+            inst.editor.style.cursor = col >= 0 ? 'col-resize' : '';
+        });
+
+        inst.editor.addEventListener('mousedown', function(e) {
+            var el = getTargetElement(e);
+            if (!el) return;
+            var table = el.closest ? el.closest('table') : null;
+            if (!table || !inst.editor.contains(table)) return;
+            var col = findNearBorder(table, e.clientX, e.clientY);
+            if (col < 0) return;
+
+            e.preventDefault();
+            dragging = true;
+            dragCol = col;
+            dragTable = table;
+            startX = e.clientX;
+            ensureColWidths(table);
+            startWidths = [getColWidth(table, col), getColWidth(table, col + 1)];
+
+            // Create transparent overlay to capture mousemove over the whole viewport
+            overlay = createOverlay();
+
+            // Bind global handlers
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('mouseup', onDragEnd);
+        });
+
+        function onDragMove(e) {
+            if (!dragging || !dragTable) return;
+            var dx = e.clientX - startX;
+            var newLeft = startWidths[0] + dx;
+            var newRight = startWidths[1] - dx;
+            if (newLeft < 30 || newRight < 30) return;
+            setColWidth(dragTable, dragCol, newLeft);
+            setColWidth(dragTable, dragCol + 1, newRight);
+        }
+
+        function onDragEnd() {
+            dragging = false;
+            dragTable = null;
+            dragCol = -1;
+            inst.editor.style.cursor = '';
+            if (overlay) { overlay.remove(); overlay = null; }
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('mouseup', onDragEnd);
+            syncToTextarea(inst);
+        }
+    }
+
+    /* ===========================
        FIND & REPLACE — 6.5
        =========================== */
 
@@ -1622,12 +1785,20 @@
         textarea.style.display = 'none';
         textarea.parentNode.insertBefore(wrapper, textarea);
 
+        // Store per-instance locale for multi-language support on same page
+        var instanceLocale = _locale;
+        if (options.locale) {
+            if (typeof options.locale === 'string') { instanceLocale = options.locale; }
+            else if (typeof options.locale === 'object') { instanceLocale = '_custom'; }
+        }
+
         var instance = {
             textarea: textarea, wrapper: wrapper, toolbar: toolbar,
             editor: editor, sourceView: sourceView,
             isSourceMode: false, isFullscreen: false,
             _selectedImg: null, _resizeWrapper: null,
-            _selectedVideo: null
+            _selectedVideo: null,
+            _locale: instanceLocale
         };
         instances[textareaId] = instance;
 
@@ -1814,9 +1985,11 @@
             }
         });
 
-        document.addEventListener('selectionchange', function() {
+        // Store handler ref for cleanup in destroy()
+        instance._selectionChangeHandler = function() {
             if (document.activeElement === editor) updateActiveStates(instance);
-        });
+        };
+        document.addEventListener('selectionchange', instance._selectionChangeHandler);
 
         // 6.2 Balloon toolbar (enabled via toolbarMode option)
         var _toolbarMode = options.toolbarMode || 'top';
@@ -1831,17 +2004,21 @@
                     hideBalloonToolbar();
                 }
             });
-            // Hide balloon when clicking outside editor
-            document.addEventListener('mousedown', function(e) {
+            // Hide balloon when clicking outside editor — store ref for destroy() cleanup
+            instance._balloonMousedownHandler = function(e) {
                 if (_activeBalloon && !_activeBalloon.contains(e.target) && !editor.contains(e.target)) {
                     hideBalloonToolbar();
                 }
-            });
+            };
+            document.addEventListener('mousedown', instance._balloonMousedownHandler);
             if (_toolbarMode === 'balloon') toolbar.style.display = 'none';
         }
 
         var oldToolbar = wrapper.parentNode.querySelector('.wysiwyg-toolbar');
         if (oldToolbar) oldToolbar.remove();
+
+        // 7.3 Table column resize handles
+        initTableColResize(instance);
 
         syncToTextarea(instance);
 
@@ -1867,7 +2044,8 @@
         var words = text === '' ? 0 : text.split(/\s+/).length;
         var chars = text.length;
         var el = inst._statusBar.querySelector('.zw-word-count');
-        if (el) el.textContent = words + ' ' + (words === 1 ? 'word' : 'words') + ' · ' + chars + ' chars';
+        var wordLabel = words === 1 ? t('wordSingular', inst) : t('wordPlural', inst);
+        if (el) el.textContent = words + ' ' + wordLabel + ' · ' + chars + ' ' + t('charLabel', inst);
     }
 
     /* ===========================
@@ -2411,11 +2589,20 @@
         return html;
     }
 
+    function _safeUrl(url) {
+        // Protocol whitelist — blocks javascript:, data:, vbscript: etc.
+        return /^(https?:|mailto:|tel:|#|\/|\.|[^:]*$)/i.test(url.trim()) ? url : '#';
+    }
+
     function _inlineMd(text) {
         // Images: ![alt](url)
-        text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%" />');
-        // Links: [text](url)
-        text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+        text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, function(m, alt, url) {
+            return '<img src="' + _safeUrl(url) + '" alt="' + alt + '" style="max-width:100%" />';
+        });
+        // Links: [text](url) — with protocol whitelist to prevent javascript: XSS
+        text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(m, linkText, url) {
+            return '<a href="' + _safeUrl(url) + '" target="_blank" rel="noopener">' + linkText + '</a>';
+        });
         // Bold: **text** or __text__
         text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
         text = text.replace(/__(.+?)__/g, '<strong>$1</strong>');
@@ -2571,6 +2758,21 @@
         var inst = instances[textareaId];
         if (!inst) return;
         removeImageResizeHandles(inst);
+        // Clean up document-level listeners to prevent leaks
+        if (inst._selectionChangeHandler) {
+            document.removeEventListener('selectionchange', inst._selectionChangeHandler);
+            inst._selectionChangeHandler = null;
+        }
+        if (inst._balloonMousedownHandler) {
+            document.removeEventListener('mousedown', inst._balloonMousedownHandler);
+            inst._balloonMousedownHandler = null;
+        }
+        if (inst._escHandler) {
+            document.removeEventListener('keydown', inst._escHandler);
+            inst._escHandler = null;
+        }
+        hideBalloonToolbar();
+        hideSlashMenu();
         inst.textarea.style.display = '';
         inst.wrapper.remove();
         delete instances[textareaId];

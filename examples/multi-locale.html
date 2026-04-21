@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero WYSIWYG — Multi-Locale (Per-Instance Language)</title>
+    <link rel="stylesheet" href="../src/zero-wysiwyg.css">
+    <link rel="stylesheet" href="../src/themes/dark.css">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; color: #333; }
+        h1 { margin-bottom: 8px; }
+        p.desc { color: #666; margin-bottom: 24px; }
+        .info { margin-bottom: 24px; padding: 16px 20px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-size: 13px; line-height: 1.8; }
+        .info h3 { margin: 0 0 8px; font-size: 14px; color: #2563eb; }
+        .info code { background: #dbeafe; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+        .editor-section { margin-bottom: 32px; }
+        .editor-section h2 { font-size: 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .editor-section p { font-size: 13px; color: #888; margin-bottom: 12px; }
+        .flag { font-size: 24px; }
+        .dark-wrapper { padding: 16px; background: #0f0c29; border-radius: 12px; }
+    </style>
+</head>
+<body>
+    <h1>Zero WYSIWYG — Multi-Locale Example</h1>
+    <p class="desc">Multiple editors on the same page, each with its own language. The toolbar labels, dialogs, slash commands, and word count all use the per-instance locale.</p>
+
+    <div class="info">
+        <h3>🌐 Per-Instance Locale (v1.2)</h3>
+        • Each editor gets its own <code>locale</code> option — they don't share a global language<br>
+        • The word count bar shows localized labels: <strong>"107 words"</strong> vs <strong>"107 palabras"</strong> vs <strong>"107 mots"</strong><br>
+        • Toolbar tooltips, dialogs, slash command labels — all follow the per-instance locale<br>
+        • External locale files (<code>src/i18n/*.js</code>) must be loaded via <code>&lt;script&gt;</code> for languages beyond EN/ES
+    </div>
+
+    <div class="editor-section">
+        <h2><span class="flag">🇬🇧</span> English Editor</h2>
+        <p>Default locale — toolbar, word count, and slash commands in English</p>
+        <textarea id="editor-en">
+            <p>This editor uses the <strong>English</strong> locale. Notice the word count below shows "words" and "chars".</p>
+            <p>Try the slash commands — type <strong>/</strong> at the start of a new line to see English labels.</p>
+        </textarea>
+    </div>
+
+    <div class="editor-section">
+        <h2><span class="flag">🇪🇸</span> Spanish Editor</h2>
+        <p>Spanish locale — toolbar tooltips, dialogs, and word count all in Spanish</p>
+        <textarea id="editor-es">
+            <p>Este editor usa el idioma <strong>español</strong>. El contador de palabras muestra "palabras" y "caracteres".</p>
+            <p>Prueba los comandos con <strong>/</strong> al inicio de una línea para ver las etiquetas en español.</p>
+        </textarea>
+    </div>
+
+    <div class="editor-section">
+        <h2><span class="flag">🇫🇷</span> French Editor (Dark Theme)</h2>
+        <p>French locale + dark theme — fully localized, including word count</p>
+        <div class="dark-wrapper">
+            <textarea id="editor-fr">
+                <p>Cet éditeur utilise la langue <strong>française</strong> avec le thème sombre. Le compteur affiche "mots" et "caractères".</p>
+                <p>Essayez les commandes slash — tapez <strong>/</strong> en début de ligne.</p>
+            </textarea>
+        </div>
+    </div>
+
+    <div class="editor-section">
+        <h2><span class="flag">🇯🇵</span> Japanese Editor</h2>
+        <p>Japanese locale — all UI elements in Japanese</p>
+        <textarea id="editor-ja">
+            <p>このエディタは<strong>日本語</strong>ロケールを使用しています。ワードカウントは「語」と「文字」で表示されます。</p>
+            <p>スラッシュコマンドを試してみてください — 行の先頭で<strong>/</strong>と入力すると、日本語のラベルが表示されます。</p>
+        </textarea>
+    </div>
+
+    <!-- Load external locales (EN and ES are embedded, FR/DE/PT/IT/JA need external files) -->
+    <script src="../src/zero-wysiwyg.js"></script>
+    <script src="../src/i18n/fr.js"></script>
+    <script src="../src/i18n/ja.js"></script>
+    <script>
+        // Each editor gets its own locale — they're fully independent
+        ZeroWysiwyg.init('editor-en', {
+            height: '200px',
+            locale: 'en',
+            wordCount: true,
+            slashCommands: true,
+            autoLink: true
+        });
+
+        ZeroWysiwyg.init('editor-es', {
+            height: '200px',
+            locale: 'es',
+            wordCount: true,
+            slashCommands: true,
+            autoLink: true
+        });
+
+        ZeroWysiwyg.init('editor-fr', {
+            height: '200px',
+            locale: 'fr',
+            theme: 'dark',
+            toolbarMode: 'both',
+            wordCount: true,
+            slashCommands: true,
+            autoLink: true
+        });
+
+        ZeroWysiwyg.init('editor-ja', {
+            height: '200px',
+            locale: 'ja',
+            wordCount: true,
+            slashCommands: true,
+            autoLink: true
+        });
+    </script>
+</body>
+</html>

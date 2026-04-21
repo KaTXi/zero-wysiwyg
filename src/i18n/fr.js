@@ -46,5 +46,6 @@ ZeroWysiwyg.locales.fr = {
     addRowAbove: 'Ajouter ligne au-dessus', addRowBelow: 'Ajouter ligne en dessous',
     addColLeft: 'Ajouter colonne à gauche', addColRight: 'Ajouter colonne à droite',
     deleteRow: 'Supprimer la ligne', deleteCol: 'Supprimer la colonne', deleteTable: 'Supprimer le tableau',
-    toggleHeader: 'Basculer ligne en-tête'
+    toggleHeader: 'Basculer ligne en-tête',
+    wordSingular: 'mot', wordPlural: 'mots', charLabel: 'caractères'
 };

@@ -46,5 +46,6 @@ ZeroWysiwyg.locales.de = {
     addRowAbove: 'Zeile darüber einfügen', addRowBelow: 'Zeile darunter einfügen',
     addColLeft: 'Spalte links einfügen', addColRight: 'Spalte rechts einfügen',
     deleteRow: 'Zeile löschen', deleteCol: 'Spalte löschen', deleteTable: 'Tabelle löschen',
-    toggleHeader: 'Kopfzeile umschalten'
+    toggleHeader: 'Kopfzeile umschalten',
+    wordSingular: 'Wort', wordPlural: 'Wörter', charLabel: 'Zeichen'
 };

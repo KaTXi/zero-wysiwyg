@@ -46,5 +46,6 @@ ZeroWysiwyg.locales.en = {
     addRowAbove: 'Add row above', addRowBelow: 'Add row below',
     addColLeft: 'Add column left', addColRight: 'Add column right',
     deleteRow: 'Delete row', deleteCol: 'Delete column', deleteTable: 'Delete table',
-    toggleHeader: 'Toggle header row'
+    toggleHeader: 'Toggle header row',
+    wordSingular: 'word', wordPlural: 'words', charLabel: 'chars'
 };

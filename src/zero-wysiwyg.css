@@ -605,5 +605,11 @@ body.wysiwyg-fullscreen-active { overflow: hidden; }
 .zw-table-ctx-item:hover { background: var(--zw-accent-light); color: var(--zw-accent); }
 .zw-table-ctx-sep { height: 1px; background: var(--zw-border); margin: 4px 0; }
 
+/* === Table Column Resize Overlay === */
+.zw-col-resize-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 99999; cursor: col-resize; background: transparent;
+}
+
 /* === Legacy toolbar (hidden when WYSIWYG active) === */
 .wysiwyg-toolbar { display: none; }
