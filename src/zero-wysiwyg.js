@@ -26,7 +26,20 @@
 
     var instances = {};
     var IFRAME_REGEX = /<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi;
-    var YOUTUBE_URL_REGEX = /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    var YOUTUBE_URL_REGEX = /(?:youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|live\/|shorts\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+
+    // Extract a start time from a YouTube URL: ?t=769, ?t=769s, ?t=1h2m30s or ?start=769.
+    // Embeds ignore t= entirely — they only honor start=<seconds> — so we must
+    // parse it out of the shared URL and re-emit it as start=.
+    function parseYouTubeStart(url) {
+        var m = String(url).match(/[?&](?:t|start)=([0-9hms]+)/i);
+        if (!m) return 0;
+        var v = m[1];
+        if (/^\d+s?$/i.test(v)) return parseInt(v, 10) || 0;
+        var parts = v.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/i);
+        if (!parts) return 0;
+        return (parseInt(parts[1] || 0, 10) * 3600) + (parseInt(parts[2] || 0, 10) * 60) + parseInt(parts[3] || 0, 10);
+    }
     var PLACEHOLDER_ATTR = 'data-zw-iframe-placeholder';
     var activeResizeState = null;
     var _activeBalloon = null; // Track active balloon toolbar
@@ -1665,9 +1678,9 @@
             '<div class="zw-link-dialog-field zw-img-dimensions">' +
                 '<label>' + t('dimensions') + '</label>' +
                 '<div class="zw-img-dim-row">' +
-                    '<input type="number" class="zw-img-width" value="' + escapeAttr(existingImg ? (existingImg.getAttribute('width') || '') : '') + '" placeholder="' + t('widthPlaceholder') + '" min="1" />' +
+                    '<input type="number" class="zw-img-width" value="' + escapeAttr(existingImg ? (existingImg.getAttribute('width') || '') : '620') + '" placeholder="' + t('widthPlaceholder') + '" min="1" />' +
                     '<span class="zw-img-dim-x">×</span>' +
-                    '<input type="number" class="zw-img-height" value="' + escapeAttr(existingImg ? (existingImg.getAttribute('height') || '') : '') + '" placeholder="' + t('heightPlaceholder') + '" min="1" />' +
+                    '<input type="number" class="zw-img-height" value="' + escapeAttr(existingImg ? (existingImg.getAttribute('height') || '') : '349') + '" placeholder="' + t('heightPlaceholder') + '" min="1" />' +
                     '<span class="zw-img-dim-hint">' + t('emptyOriginal') + '</span>' +
                 '</div>' +
             '</div>' +
@@ -1833,6 +1846,12 @@
                 }
             }
         });
+        // Edits made in the HTML source view must reach the textarea too; they
+        // used to stay in .zw-wysiwyg-source until the view was toggled back.
+        sourceView.addEventListener('input', function() {
+            syncToTextarea(instance);
+            if (_onChange) _onChange(instance.textarea.value);
+        });
         editor.addEventListener('focus', function() {
             if (options.onFocus) options.onFocus();
         });
@@ -1851,7 +1870,7 @@
             } else {
                 var ytMatch = text.match(YOUTUBE_URL_REGEX);
                 if (ytMatch) {
-                    document.execCommand('insertHTML', false, createYouTubePlaceholder(ytMatch[1]));
+                    document.execCommand('insertHTML', false, createYouTubePlaceholder(ytMatch[1], null, null, null, parseYouTubeStart(text)));
                 } else {
                     // Convert plain text line breaks to <br> so paragraphs are preserved
                 var htmlText = escapeHtml(text).replace(/\r\n/g, '\n').replace(/\n/g, '<br>');
@@ -2020,7 +2039,9 @@
         // 7.3 Table column resize handles
         initTableColResize(instance);
 
-        syncToTextarea(instance);
+        // Don't rewrite the textarea at init: an untouched field is submitted
+        // exactly as loaded. Flush the active view right before the form posts.
+        _hookForm(instance);
 
         // Word count status bar
         if (options.wordCount) {
@@ -2052,8 +2073,65 @@
        IFRAME ↔ PLACEHOLDER
        =========================== */
 
+    // A wrapper the editor itself could have produced: a <div> with no
+    // attributes, or only a style made of text-align, holding nothing but the
+    // given node. Anything else (classes, ids, other styles, text, siblings)
+    // is author HTML and is left alone.
+    function _isAlignWrapper(el, child) {
+        if (!el || el.nodeType !== 1 || el.tagName !== 'DIV') return false;
+        for (var a = 0; a < el.attributes.length; a++) {
+            if (el.attributes[a].name.toLowerCase() !== 'style') return false;
+        }
+        var style = (el.getAttribute('style') || '').trim().replace(/;\s*$/, '');
+        if (style !== '' && !/^text-align\s*:\s*(left|center|right)$/i.test(style)) return false;
+        for (var n = el.firstChild; n; n = n.nextSibling) {
+            if (n === child) continue;
+            if (n.nodeType === 3 && !n.nodeValue.trim()) continue;
+            if (n.nodeType === 8) continue;
+            return false;
+        }
+        return true;
+    }
+
+    function _wrapperAlign(el) {
+        var m = (el.getAttribute('style') || '').match(/text-align\s*:\s*(left|center|right)/i);
+        return m ? m[1].toLowerCase() : 'left';
+    }
+
+    // Collapse every editor-style alignment wrapper around an iframe into one
+    // data-zw-align attribute. Each save used to add one more
+    // <div style="text-align:center"> around YouTube embeds (20+ levels seen
+    // in real content); absorbing them on load makes the cycle idempotent and
+    // also repairs content that is already nested.
+    function _absorbIframeWrappers(html) {
+        if (!/<iframe\b/i.test(html)) return html;
+        var tpl = document.createElement('template');
+        tpl.innerHTML = html;
+        var root = tpl.content;
+        var iframes = root.querySelectorAll('iframe');
+        if (!iframes.length) return html;
+        for (var i = 0; i < iframes.length; i++) {
+            var ifr = iframes[i];
+            var node = ifr;
+            var align = null;
+            while (node.parentNode && node.parentNode !== root && _isAlignWrapper(node.parentNode, node)) {
+                var wrap = node.parentNode;
+                if (align === null) align = _wrapperAlign(wrap);   // innermost wins, as in CSS
+                wrap.parentNode.replaceChild(node, wrap);
+            }
+            if (align !== null) ifr.setAttribute('data-zw-align', align);
+        }
+        var out = document.createElement('div');
+        out.appendChild(root);
+        return out.innerHTML;
+    }
+
     function iframesToPlaceholders(html) {
+        html = _absorbIframeWrappers(html);
         return html.replace(IFRAME_REGEX, function(match) {
+            var alignM = match.match(/\sdata-zw-align="(left|center|right)"/i);
+            var align = alignM ? alignM[1].toLowerCase() : 'center';
+            match = match.replace(/\sdata-zw-align="[^"]*"/i, '');
             var srcMatch = match.match(/src=["']([^"']+)["']/i);
             var src = srcMatch ? srcMatch[1] : '';
             var wM = match.match(/width=["']?(\d+)/i);
@@ -2061,9 +2139,10 @@
             var w = wM ? wM[1] : '560';
             var h = hM ? hM[1] : '315';
             var ytMatch = src.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
-            if (ytMatch) return createYouTubePlaceholder(ytMatch[1], w, h, match);
+            if (ytMatch) return createYouTubePlaceholder(ytMatch[1], w, h, match, null, align);
             return '<div ' + PLACEHOLDER_ATTR + ' contenteditable="false" ' +
                    'data-iframe-html="' + escapeAttr(match) + '" ' +
+                   'data-align="' + align + '" ' +
                    'class="zw-iframe-placeholder">' +
                    '<div class="zw-placeholder-icon">⊞</div>' +
                    '<div class="zw-placeholder-label">' + t('iframeEmbed') + '</div>' +
@@ -2071,19 +2150,24 @@
         });
     }
 
-    function createYouTubePlaceholder(videoId, width, height, originalHtml) {
+    function createYouTubePlaceholder(videoId, width, height, originalHtml, startSeconds, align) {
         width = width || '560'; height = height || '315';
+        align = align || 'center';
+        var startParam = (startSeconds && startSeconds > 0) ? '?start=' + parseInt(startSeconds, 10) : '';
         var iframeHtml = originalHtml ||
-            '<iframe width="' + width + '" height="' + height + '" src="https://www.youtube.com/embed/' + videoId + '" frameborder="0" allowfullscreen></iframe>';
+            '<iframe width="' + width + '" height="' + height + '" src="https://www.youtube.com/embed/' + videoId + startParam + '" frameborder="0" allowfullscreen></iframe>';
         var thumbUrl = 'https://img.youtube.com/vi/' + videoId + '/hqdefault.jpg';
-        // Default alignment is center
+        var startLabel = (startSeconds && startSeconds > 0) ? ' @' + Math.floor(startSeconds / 60) + ':' + ('0' + (startSeconds % 60)).slice(-2) : '';
+        var margins = align === 'left' ? 'margin-left:0;margin-right:auto;'
+                    : align === 'right' ? 'margin-left:auto;margin-right:0;'
+                    : 'margin-left:auto;margin-right:auto;';
         return '<div ' + PLACEHOLDER_ATTR + ' contenteditable="false" ' +
                'data-iframe-html="' + escapeAttr(iframeHtml) + '" data-youtube-id="' + videoId + '" ' +
-               'data-align="center" ' +
+               'data-align="' + align + '" ' +
                'class="zw-iframe-placeholder zw-youtube-placeholder" ' +
-               'style="background-image:url(\'' + thumbUrl + '\');margin-left:auto;margin-right:auto;width:' + width + 'px;max-width:' + width + 'px">' +
+               'style="background-image:url(\'' + thumbUrl + '\');' + margins + 'width:' + width + 'px;max-width:' + width + 'px">' +
                '<div class="zw-yt-play">▶</div>' +
-               '<div class="zw-placeholder-label">YouTube: ' + videoId + '</div></div>';
+               '<div class="zw-placeholder-label">YouTube: ' + videoId + startLabel + '</div></div>';
     }
 
     function placeholdersToIframes(html) {
@@ -2107,7 +2191,17 @@
             var iframeHtml = ph.getAttribute('data-iframe-html');
             if (iframeHtml) {
                 var align = ph.getAttribute('data-align') || 'center';
-                // Wrap iframe in a div with alignment
+                // Reuse an alignment wrapper the browser already put around the
+                // placeholder (e.g. after "Centrar" via execCommand) instead of
+                // nesting a new one inside it.
+                var parent = ph.parentNode;
+                if (parent !== tmp && _isAlignWrapper(parent, ph)) {
+                    while (parent.firstChild) parent.removeChild(parent.firstChild);
+                    parent.removeAttribute('style');
+                    if (align !== 'left') parent.style.textAlign = align;
+                    parent.innerHTML = iframeHtml;
+                    continue;
+                }
                 var wrapperDiv = document.createElement('div');
                 if (align === 'center') {
                     wrapperDiv.style.textAlign = 'center';
@@ -2292,7 +2386,7 @@
             var h = hInput.value.trim() || '349';
             if (savedRange) { var s = window.getSelection(); s.removeAllRanges(); s.addRange(savedRange); }
             inst.editor.focus();
-            document.execCommand('insertHTML', false, createYouTubePlaceholder(videoId, w, h));
+            document.execCommand('insertHTML', false, createYouTubePlaceholder(videoId, w, h, null, parseYouTubeStart(input)));
             syncToTextarea(inst);
             close();
         }
@@ -2329,7 +2423,8 @@
         }
         var btn = inst.toolbar.querySelector('[data-cmd="_toggleSource"]');
         if (btn) btn.classList.toggle('active', inst.isSourceMode);
-        syncToTextarea(inst);
+        // Switching views is not an edit: only refresh an already-edited field
+        if (inst._dirty) _writeTextarea(inst);
     }
 
     function toggleFullscreen(inst) {
@@ -2631,12 +2726,56 @@
        SYNC & UTILITIES
        =========================== */
 
+    // Every caller runs after a real edit, so syncing marks the instance dirty.
+    // Until the first edit the original textarea is never rewritten: opening a
+    // document (or switching views without editing) submits the HTML untouched.
     function syncToTextarea(inst) {
+        inst._dirty = true;
+        _writeTextarea(inst);
+    }
+
+    // Copy the active view (the one holding the latest content) to the textarea.
+    function _writeTextarea(inst) {
         if (inst.isSourceMode) {
             inst.textarea.value = inst.sourceView.value;
         } else {
+            // placeholdersToIframes works on a copy and strips resize UI itself
             inst.textarea.value = placeholdersToIframes(inst.editor.innerHTML);
         }
+    }
+
+    // Flush one instance before its form is serialized. No-op when untouched.
+    function _flush(inst) {
+        if (inst && inst._dirty) _writeTextarea(inst);
+    }
+
+    function syncAll() {
+        for (var id in instances) {
+            if (Object.prototype.hasOwnProperty.call(instances, id)) _flush(instances[id]);
+        }
+    }
+
+    // One capture-phase listener per form flushes every editor in that form.
+    // 'submit' covers the submit button; 'formdata' also covers form.submit()
+    // and new FormData(form), which never fire 'submit'.
+    function _hookForm(inst) {
+        var form = inst.textarea.form;
+        if (!form || form._zwHooked) return;
+        form._zwHooked = true;
+        var flushForm = function(e) {
+            for (var id in instances) {
+                if (Object.prototype.hasOwnProperty.call(instances, id) && instances[id].textarea.form === form) {
+                    var it = instances[id];
+                    _flush(it);
+                    // 'formdata' fires after the entry list is built, so patch it too
+                    if (e && e.formData && it.textarea.name && it._dirty) {
+                        e.formData.set(it.textarea.name, it.textarea.value);
+                    }
+                }
+            }
+        };
+        form.addEventListener('submit', flushForm, true);
+        form.addEventListener('formdata', flushForm, true);
     }
 
     function updateActiveStates(inst) {
@@ -2683,6 +2822,11 @@
     }
 
     function formatHtml(html) {
+        // Drop the line breaks a previous pass added, so toggling views
+        // repeatedly does not keep inserting blank lines (idempotent)
+        html = html.replace(/\n+(<\/?(?:div|p|h[1-6]|ul|ol|li|table|tr|blockquote|hr|iframe)\b[^>]*>)/gi, '$1');
+        html = html.replace(/(<\/?(?:div|p|h[1-6]|ul|ol|li|table|tr|blockquote|hr|iframe)\b[^>]*>)\n+/gi, '$1');
+        html = html.replace(/(<br\s*\/?>)\n+/gi, '$1');
         html = html.replace(/(<\/(?:div|p|h[1-6]|ul|ol|li|table|tr|blockquote|hr|iframe)[^>]*>)/gi, '$1\n');
         html = html.replace(/(<(?:div|p|h[1-6]|ul|ol|table|tr|blockquote|hr|iframe)\b[^>]*>)/gi, '\n$1');
         html = html.replace(/(<br\s*\/?>)/gi, '$1\n');
@@ -2707,7 +2851,7 @@
     function getHTML(textareaId) {
         var inst = instances[textareaId];
         if (!inst) return '';
-        syncToTextarea(inst);
+        _flush(inst);
         return inst.textarea.value;
     }
 
@@ -2793,6 +2937,8 @@
         destroy: destroy,
         getHTML: getHTML,
         setHTML: setHTML,
+        sync: function(textareaId) { _flush(instances[textareaId]); },
+        syncAll: syncAll,
         getMarkdown: getMarkdown,
         setMarkdown: setMarkdown,
         isEmpty: isEmpty,

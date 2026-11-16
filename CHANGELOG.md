@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] — 2026-11-16
+
+### Fix: HTML source edits were not submitted
+- **Edits made in the HTML source view now reach the form.** The source `<textarea>` had no `input` listener, so the original field kept the old HTML until the view was toggled back; saving straight from source mode posted the previous content
+- **Forms are flushed right before posting.** Each form gets one capture-phase `submit` + `formdata` listener that copies every editor's active view (the one holding the latest content) into its textarea. `form.submit()` and `new FormData(form)` are covered as well
+- New API: `ZeroWysiwyg.sync(textareaId)` and `ZeroWysiwyg.syncAll()` for code that reads `textarea.value` or posts the form by hand
+- `getHTML()` returns the original HTML for a field that hasn't been edited
+
+### Fix: Stable HTML across open/edit/save cycles
+- **No more stacking `<div style="text-align:center">` around embeds.** Loading HTML turned the iframe into a placeholder but left its alignment `<div>` in place; saving added a new one inside it, so every cycle added a level (20+ levels seen in real content). Alignment wrappers are now absorbed into the placeholder on load and written back once on save
+- **Existing nested wrappers are repaired** the next time the content is edited: any chain of attribute-free or `text-align`-only `<div>`s around a single iframe collapses to one, keeping the innermost alignment
+- Author markup is left alone: a `<div>` with a class, id, other styles, text or siblings around an iframe is never absorbed
+- Re-centring an embed with the alignment toolbar reuses the wrapper the browser created instead of nesting another
+- Left/right/center alignment of existing embeds is now read from their wrapper (previously always reset to center)
+- **Untouched fields are submitted byte-for-byte.** The editor no longer rewrites the textarea on init or when switching views without editing, so custom widgets, SVG and inline `<style>` in fields nobody touched are never reserialized
+- Source-view formatting is idempotent: toggling views repeatedly no longer keeps adding line breaks
+
+### Tests
+- `tests/editor-sync.html`: browser test page for both fixes (open it, or run it headless — see CONTRIBUTING)
+
+### YouTube Start-Time Support
+- **`t=` / `start=` parameters now honored** — Pasting or inserting a URL like `https://youtu.be/<id>?t=769` produces an embed that starts at that offset. Previously the time was silently dropped and the video always played from 0:00, because YouTube embeds ignore `t=` and only honor `start=<seconds>`
+- Supports all share-URL time formats: `t=769` (seconds), `t=769s`, `t=1h2m30s`, and explicit `start=769`
+- The editor placeholder shows the captured offset (e.g. `YouTube: AQFJ0zBc97U @12:49`) so authors can verify it before saving
+- Works on both insert paths: pasting a URL and the Insert YouTube dialog
+- Existing embeds are untouched (placeholders keep their stored iframe HTML)
+
+### Expanded YouTube URL Support
+- **Live streams now embeddable** — URLs like `https://www.youtube.com/live/TpZ3HhFyfGw` are recognized in both the YouTube dialog and on paste
+- **Shorts** — `https://www.youtube.com/shorts/<id>` is also recognized
+- **Legacy `/v/` URLs** — `https://www.youtube.com/v/<id>` is also recognized
+- **Privacy-enhanced domain** — `https://www.youtube-nocookie.com/embed/<id>` is also recognized
+- All forms still extract the 11-character video ID and produce the same `youtube.com/embed/<id>` iframe on save, so output HTML is unchanged
+- Existing forms (`watch?v=`, `youtu.be/`, `embed/`, query string after the ID) continue to work
+
 ## [1.2.0] — 2026-04-21
 
 ### Table Column Resize

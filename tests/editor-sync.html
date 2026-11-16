@@ -1,0 +1,109 @@
+<!doctype html>
+<html><head><meta charset="utf-8"></head>
+<body>
+<form id="f" onsubmit="return false">
+  <textarea id="pag1" name="pag1"></textarea>
+  <textarea id="pag2" name="pag2"></textarea>
+  <textarea id="pag3" name="pag3"></textarea>
+</form>
+<pre id="out"></pre>
+<script src="../src/zero-wysiwyg.js"></script>
+<script>
+var out = [], fails = 0;
+function check(name, cond, extra) {
+  if (!cond) fails++;
+  out.push((cond ? 'PASS ' : 'FAIL ') + name + (cond ? '' : '  -> ' + extra));
+}
+var YT = '<iframe width="620" height="349" src="https://www.youtube.com/embed/GSj-TJdw0Lo" frameborder="0" allowfullscreen></iframe>';
+var ORIG = '<p>Intro <strong>x</strong></p>\n<div style="text-align: center;">' + YT + '</div>\n' +
+  '<div class="widget" style="padding:4px"><svg width="10" height="10"><circle cx="5" cy="5" r="4"></circle></svg></div>' +
+  '<style>.widget{color:red}</style><p>Fin</p>';
+var NESTED = '<p>a</p>' + '<div style="text-align:center;">'.repeat(20) + YT + '</div>'.repeat(20) + '<p>b</p>';
+var CUSTOM = '<div class="card" id="c1"><iframe src="https://example.com/x" width="300" height="200"></iframe></div>';
+
+var f = document.getElementById('f');
+document.getElementById('pag1').value = ORIG;
+document.getElementById('pag2').value = NESTED;
+document.getElementById('pag3').value = CUSTOM;
+ZeroWysiwyg.init('pag1', {locale: 'es'});
+ZeroWysiwyg.init('pag2', {locale: 'es'});
+ZeroWysiwyg.init('pag3', {locale: 'es'});
+var i1 = ZeroWysiwyg.getInstance('pag1'), i2 = ZeroWysiwyg.getInstance('pag2'), i3 = ZeroWysiwyg.getInstance('pag3');
+
+function submit() { f.dispatchEvent(new Event('submit', {cancelable: true})); }
+function countDivs(s) { return (s.match(/<div\b/gi) || []).length; }
+
+// 1. Untouched fields are submitted byte-identical
+submit();
+check('untouched pag1 identical after init+submit', document.getElementById('pag1').value === ORIG, document.getElementById('pag1').value);
+check('untouched pag2 identical (no rewrite on open)', document.getElementById('pag2').value === NESTED, '');
+
+// 2. Toggling views without editing doesn't change the textarea
+i1.toolbar.querySelector('[data-cmd="_toggleSource"]').click();
+i1.toolbar.querySelector('[data-cmd="_toggleSource"]').click();
+submit();
+check('toggle without edit keeps pag1 identical', document.getElementById('pag1').value === ORIG, document.getElementById('pag1').value);
+
+// 3. The reported bug: edit in HTML source mode, then submit straight away
+i1.toolbar.querySelector('[data-cmd="_toggleSource"]').click();
+i1.sourceView.value = i1.sourceView.value.replace('Fin', 'Fin EDITADO');
+i1.sourceView.dispatchEvent(new Event('input', {bubbles: true}));
+submit();
+check('source-mode edit reaches pag1 on submit', /Fin EDITADO/.test(document.getElementById('pag1').value), document.getElementById('pag1').value);
+// even without an input event (programmatic change), submit flushes the active view
+i1.sourceView.value = i1.sourceView.value.replace('EDITADO', 'EDITADO2');
+submit();
+check('submit flushes the active source view', /EDITADO2/.test(document.getElementById('pag1').value), '');
+// FormData path (form.submit()/new FormData) also flushes
+i1.sourceView.value = i1.sourceView.value.replace('EDITADO2', 'EDITADO3');
+var fd = new FormData(f);
+check('formdata flushes the active view', /EDITADO3/.test(fd.get('pag1')), fd.get('pag1'));
+i1.toolbar.querySelector('[data-cmd="_toggleSource"]').click();   // back to visual
+
+// 4. Visual-mode edit
+i1.editor.querySelector('p').appendChild(document.createTextNode(' VISUAL'));
+i1.editor.dispatchEvent(new Event('input', {bubbles: true}));
+submit();
+var v1 = document.getElementById('pag1').value;
+check('visual edit reaches pag1', /VISUAL/.test(v1), v1);
+check('svg + style + widget div preserved', /<svg/.test(v1) && /<style>/.test(v1) && /class="widget"/.test(v1), v1);
+
+// 5. Idempotency: 10 edit cycles (source<->visual + save) keep the same structure
+var first = null, stable = true;
+for (var k = 0; k < 10; k++) {
+  i1.toolbar.querySelector('[data-cmd="_toggleSource"]').click();
+  i1.sourceView.dispatchEvent(new Event('input', {bubbles: true}));
+  i1.toolbar.querySelector('[data-cmd="_toggleSource"]').click();
+  i1.editor.dispatchEvent(new Event('input', {bubbles: true}));
+  submit();
+  var v = document.getElementById('pag1').value;
+  // simulate reopening the saved review
+  ZeroWysiwyg.setHTML('pag1', v); submit();
+  v = document.getElementById('pag1').value;
+  if (first === null) first = v; else if (v !== first) stable = false;
+}
+check('10 open/edit/save cycles: HTML stable', stable, first + '\n---\n' + document.getElementById('pag1').value);
+check('one centred wrapper around the video', (first.match(/<div style="text-align: center;"><iframe/g) || []).length === 1 && countDivs(first) === 2, first);
+
+// 6. Existing 20-level nesting is repaired on first edit
+i2.editor.dispatchEvent(new Event('input', {bubbles: true}));
+submit();
+var v2 = document.getElementById('pag2').value;
+check('20 nested wrappers collapse to 1', countDivs(v2) === 1 && /<div style="text-align: center;"><iframe/.test(v2), v2);
+
+// 7. Custom wrapper with class/id around an iframe is not absorbed
+i3.editor.dispatchEvent(new Event('input', {bubbles: true}));
+submit();
+var v3 = document.getElementById('pag3').value;
+check('custom div.card kept around iframe', /<div class="card" id="c1">/.test(v3) && /example\.com/.test(v3), v3);
+
+// 8. Right-aligned video survives a cycle as right-aligned
+ZeroWysiwyg.setHTML('pag2', '<div style="text-align:right">' + YT + '</div>');
+submit(); ZeroWysiwyg.setHTML('pag2', document.getElementById('pag2').value); submit();
+var v4 = document.getElementById('pag2').value;
+check('right alignment preserved, single wrapper', countDivs(v4) === 1 && /text-align: right/.test(v4), v4);
+
+out.push(fails ? fails + ' FAILED' : 'ALL PASSED');
+document.getElementById('out').textContent = out.join('\n');
+</script>
+</body></html>

@@ -205,6 +205,17 @@ declare namespace ZeroWysiwyg {
     function setHTML(textareaId: string, html: string): void;
 
     /**
+     * Copies the active view (visual or HTML source) into the textarea if the
+     * editor was edited. Forms do this automatically on submit/formdata.
+     */
+    function sync(textareaId: string): void;
+
+    /**
+     * Runs sync() for every editor instance on the page.
+     */
+    function syncAll(): void;
+
+    /**
      * Returns the editor content converted to Markdown.
      */
     function getMarkdown(textareaId: string): string;

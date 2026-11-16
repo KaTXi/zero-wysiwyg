@@ -28,7 +28,7 @@ Tables, code blocks, YouTube embeds, slash commands, emoji picker, balloon toolb
 - ✅ **Alignment** — Left, Center, Right
 - ✅ **Links** — Create/edit dialog with "open in new window" toggle
 - ✅ **Images** — Insert/edit with dimensions, **visual resize handles** (drag corners)
-- ✅ **YouTube embeds** — Paste URL or enter ID, thumbnail preview placeholders, **resize + alignment**
+- ✅ **YouTube embeds** — Paste URL or enter ID, thumbnail preview placeholders, **resize + alignment**, honors `t=`/`start=` time offsets
 - ✅ **Tables** — Visual 10×10 grid picker, **right-click context menu** (add/delete rows/cols, toggle header)
 - ✅ **Code blocks** — Insert with 8-language selector, compatible with Prism.js/highlight.js
 - ✅ **Color picker** — Text color + background color, 40-swatch palette, hex input, remove color
@@ -37,13 +37,14 @@ Tables, code blocks, YouTube embeds, slash commands, emoji picker, balloon toolb
 - ✅ **Slash commands** — Type `/` to trigger command menu with 12 block types (`slashCommands: true`)
 - ✅ **Find & Replace** — Ctrl+F with match highlighting, case toggle, Replace All
 - ✅ **Auto-link detection** — Bare URLs automatically wrapped in `<a>` tags as you type
-- ✅ **HTML source editing** — Toggle to view/edit raw HTML
+- ✅ **HTML source editing** — Toggle to view/edit raw HTML; edits in either view are always the ones submitted
+- ✅ **Stable HTML** — Untouched fields are submitted exactly as loaded; open/edit/save cycles don't re-wrap embeds or reflow the source
 - ✅ **Fullscreen mode** — Escape to exit
 - ✅ **Smart paste** — Cleans Word/Office HTML, preserves line breaks, YouTube URLs auto-embed
 - ✅ **Undo/Redo** — Toolbar buttons + Ctrl+Z / Ctrl+Y
 - ✅ **Word count** — Optional status bar showing words and characters
 - ✅ **SVG toolbar icons** — 37 clean inline SVG icons, Lucide-style
-- ✅ **Programmatic API** — 10 methods: `getHTML`, `setHTML`, `isEmpty`, `focus`, `enable`, `disable`, etc.
+- ✅ **Programmatic API** — 12 methods: `getHTML`, `setHTML`, `sync`, `syncAll`, `isEmpty`, `focus`, `enable`, `disable`, etc.
 - ✅ **Event callbacks** — `onChange`, `onFocus`, `onBlur`, `onReady`
 - ✅ **Toolbar customization** — Filter by button name, alias, or group label
 - ✅ **Accessibility** — ARIA labels, roles on all toolbar buttons
@@ -140,6 +141,16 @@ ZeroWysiwyg.init(el, { height: '400px' });
 
 Returns the editor instance.
 
+### Form submission
+
+The editor keeps the original `<textarea>` as the form field. Nothing extra is needed to submit it:
+
+- Edits in the **visual view** and in the **HTML source view** both update the textarea as you type.
+- Right before the form posts (`submit` and `formdata` events, so `form.submit()` and `new FormData(form)` are covered too), every editor in the form copies its active view into its textarea.
+- A field nobody edited is submitted **exactly as it was loaded**, byte for byte. Opening a document or switching views without editing never rewrites its HTML.
+
+If you post the form some other way (e.g. building the request by hand), call `ZeroWysiwyg.syncAll()` first.
+
 ### Toolbar Customization
 
 Pass a `toolbar` array to show only specific buttons:
@@ -167,6 +178,14 @@ Returns the cleaned HTML content of the editor.
 ### `ZeroWysiwyg.setHTML(textareaId, html)`
 
 Programmatically sets the editor content.
+
+### `ZeroWysiwyg.sync(textareaId)`
+
+Copies the editor's active view (visual or HTML source) into its textarea, if it has been edited. Forms do this automatically on submit; call it when you read `textarea.value` yourself.
+
+### `ZeroWysiwyg.syncAll()`
+
+`sync()` for every editor on the page.
 
 ### `ZeroWysiwyg.getMarkdown(textareaId)`
 

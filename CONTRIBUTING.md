@@ -137,7 +137,13 @@ zero-wysiwyg/
 
 ## Testing
 
-There is currently no automated test suite. Testing is done manually:
+There is no automated test runner. Open `tests/editor-sync.html` in a browser (it prints PASS/FAIL for form sync and HTML stability), or run it headless:
+
+```bash
+chrome --headless --allow-file-access-from-files --dump-dom "file://$PWD/tests/editor-sync.html" | grep -E "PASS|FAIL"
+```
+
+Everything else is tested manually:
 
 ### Manual Testing Checklist
 
@@ -148,7 +154,7 @@ Before submitting a PR, verify these work:
 3. **Link dialog** — create link, edit existing link, open in new window toggle
 4. **Image dialog** — insert image URL, resize with drag handles
 5. **YouTube embed** — paste URL, verify thumbnail preview, resize + alignment
-6. **HTML source toggle** — switch to source, edit, switch back
+6. **HTML source toggle** — switch to source, edit, **save straight from source mode** and check the edit was posted; reopen and save several times and check the HTML doesn't grow
 7. **Fullscreen mode** — enter, edit, press Escape to exit
 8. **Paste handling** — paste from Word, paste plain text, paste YouTube URL
 9. **Dark theme** — open `dark-theme.html`, verify all dialogs render correctly
